@@ -5,6 +5,7 @@ interface HeaderProps {
   onHomeClick: () => void;
   onChatClick: () => void;
   onProfileClick: () => void;
+  onInstallClick?: () => void;
   userProfile?: {
     name: string;
     avatar: string;
@@ -16,6 +17,7 @@ const Header: React.FC<HeaderProps> = ({
   onHomeClick, 
   onChatClick, 
   onProfileClick,
+  onInstallClick,
   userProfile 
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -50,6 +52,19 @@ const Header: React.FC<HeaderProps> = ({
             
             {/* Right Actions */}
             <div className="flex items-center space-x-2">
+              {/* Install Button (visible when PWA installable) */}
+              {onInstallClick && (
+                <button
+                  onClick={onInstallClick}
+                  className="p-3 bg-amber-500/20 backdrop-blur-sm rounded-xl border border-amber-400/30 hover:bg-amber-500/30 active:scale-95 transition-all duration-200 group"
+                  aria-label="Install App"
+                >
+                  <svg className="w-5 h-5 text-amber-400 group-hover:text-amber-300 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
+              )}
+
               {/* AI Chat Button */}
               <button
                 onClick={onChatClick}

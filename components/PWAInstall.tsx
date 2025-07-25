@@ -10,6 +10,11 @@ const PWAInstall: React.FC<PWAInstallProps> = ({ onClose }) => {
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
+    console.log('=== PWA Debug Info ===');
+    console.log('User Agent:', navigator.userAgent);
+    console.log('Protocol:', location.protocol);
+    console.log('Hostname:', location.hostname);
+    
     // Check if app is already installed
     const isInStandaloneMode = () => {
       return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || 
@@ -18,6 +23,7 @@ const PWAInstall: React.FC<PWAInstallProps> = ({ onClose }) => {
     };
 
     setIsStandalone(isInStandaloneMode());
+    console.log('Is Standalone:', isInStandaloneMode());
 
     const handler = (e: Event) => {
       console.log('beforeinstallprompt event fired');
@@ -31,7 +37,7 @@ const PWAInstall: React.FC<PWAInstallProps> = ({ onClose }) => {
     // For debugging: also show install prompt after 5 seconds if not standalone
     const debugTimer = setTimeout(() => {
       if (!isInStandaloneMode() && !localStorage.getItem('pwa-install-dismissed')) {
-        console.log('Showing manual install prompt');
+        console.log('Showing manual install prompt (no beforeinstallprompt detected)');
         setShowInstall(true);
       }
     }, 5000);

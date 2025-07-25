@@ -32,73 +32,60 @@ const CircularProgress: React.FC<{value: number, max: number, label: string, ico
             cx="50"
             cy="50"
             r="45"
-            stroke="url(#gradient)"
+            stroke="#fbbf24"
             strokeWidth="6"
             fill="none"
+            strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
-            className="transition-all duration-1000"
+            className="transition-all duration-1000 ease-out"
           />
-          <defs>
-            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f59e0b" />
-              <stop offset="100%" stopColor="#f97316" />
-            </linearGradient>
-          </defs>
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl">{icon}</span>
+        <div className="absolute inset-0 flex items-center justify-center text-2xl">
+          {icon}
         </div>
       </div>
       <div className="text-center">
-        <p className="text-lg font-bold text-white">{value}</p>
-        <p className="text-xs text-gray-400">{label}</p>
+        <div className="text-lg font-bold text-white">{value}</div>
+        <div className="text-sm text-gray-400">{label}</div>
       </div>
     </div>
   );
 };
 
-const AdventureCard: React.FC<{
-  adventure: Story;
-  onSelect: () => void;
-}> = ({ adventure, onSelect }) => {
-  const progress = adventure.currentQuestIndex / adventure.quests.length;
-  const isCompleted = adventure.currentQuestIndex >= adventure.quests.length;
-  
+const AdventureCard: React.FC<{adventure: Story, onSelect: () => void}> = ({ adventure, onSelect }) => {
+  const completed = adventure.currentQuestIndex >= adventure.quests.length;
+  const progress = completed ? 100 : Math.round((adventure.currentQuestIndex / adventure.quests.length) * 100);
+
   return (
     <div 
       onClick={onSelect}
-      className="bg-gray-800/50 p-6 rounded-xl border border-gray-600 cursor-pointer hover:border-amber-500/50 transition-all duration-200"
+      className="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-600 active:scale-95 transition-all duration-200 cursor-pointer hover:border-amber-400"
     >
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
-          <h3 className="text-xl font-semibold text-white mb-2">{adventure.title}</h3>
-          <p className="text-gray-300 text-sm mb-2">{adventure.destination.name}</p>
-          <p className="text-gray-400 text-sm line-clamp-2">{adventure.introNarrative}</p>
+          <h3 className="text-lg font-semibold text-white mb-1 line-clamp-1">{adventure.title}</h3>
+          <p className="text-sm text-gray-300">{adventure.destination.name}</p>
         </div>
-        {isCompleted && (
-          <div className="ml-4">
-            <CheckCircleIcon className="w-8 h-8 text-green-400" />
-          </div>
+        {completed && (
+          <CheckCircleIcon className="w-6 h-6 text-green-400 flex-shrink-0 ml-2"/>
         )}
       </div>
       
-      <div className="flex items-center justify-between">
-        <div className="flex-1 mr-4">
+      {!completed && (
+        <div className="mb-2">
+          <div className="flex items-center justify-between text-sm text-gray-400 mb-1">
+            <span>Progress</span>
+            <span>{adventure.currentQuestIndex}/{adventure.quests.length}</span>
+          </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full transition-all duration-500" 
-              style={{ width: `${progress * 100}%` }}
+              className="bg-amber-400 h-2 rounded-full transition-all duration-500" 
+              style={{ width: `${progress}%` }}
             ></div>
           </div>
-          <p className="text-xs text-gray-400 mt-1">
-            {adventure.currentQuestIndex} of {adventure.quests.length} quests completed
-          </p>
         </div>
-        <span className="text-sm font-medium text-amber-400">
-          {isCompleted ? 'Completed' : 'Continue'}
-        </span>
-      </div>
+      )}
     </div>
   );
 };

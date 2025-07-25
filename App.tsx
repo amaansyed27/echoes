@@ -316,6 +316,9 @@ const App: React.FC = () => {
 
   // PWA Install Trigger Effect
   useEffect(() => {
+    // Clear for testing - remove this line in production
+    localStorage.removeItem('pwa-install-dismissed');
+    
     const timer = setTimeout(() => {
       if (!localStorage.getItem('pwa-install-dismissed')) {
         setShowPWAInstall(true);
@@ -354,6 +357,7 @@ const App: React.FC = () => {
               onHomeClick={handleHomeClick}
               onChatClick={() => setIsAssistantOpen(!isAssistantOpen)}
               onProfileClick={() => setAppState(AppState.PROFILE)}
+              onInstallClick={() => setShowPWAInstall(true)}
               userProfile={userProfile}
             />
           )}
