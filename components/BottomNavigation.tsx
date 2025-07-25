@@ -22,7 +22,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentState, onSta
       state: AppState.EXPLORE,
       icon: (active: boolean) => (
         <svg className={`w-6 h-6 transition-all duration-200 ${active ? 'text-amber-400 scale-110' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9m0 0L9 21M3 12a9 9 0 919-9m-9 9l6.5-3.5M21 12l-6.5-3.5M3 12l6.5 3.5M21 12l-6.5 3.5" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9m0 0L9 21M3 12a9 9 0 019-9m-9 9l6.5-3.5M21 12l-6.5-3.5M3 12l6.5 3.5M21 12l-6.5 3.5" />
         </svg>
       ),
       label: 'Explore'

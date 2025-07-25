@@ -320,7 +320,7 @@ const App: React.FC = () => {
       if (!localStorage.getItem('pwa-install-dismissed')) {
         setShowPWAInstall(true);
       }
-    }, 10000); // Show install prompt after 10 seconds
+    }, 3000); // Show install prompt after 3 seconds
 
     return () => clearTimeout(timer);
   }, []);
