@@ -1,0 +1,7 @@
+{
+  "name": "Echoes",
+  "description": "A dynamic travel guide powered by the Gemini API and Text-to-Speech. Explore cities and landmarks through interactive stories and quests, turning your journey into an adventure.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
