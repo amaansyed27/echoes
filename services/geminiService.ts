@@ -2,6 +2,20 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { Story, Quest, GeoLocation, UserProfile } from '../types';
 import { geocodeLocation } from './geocodingService';
 
+// Define environment variable type for Vite
+declare global {
+  interface ImportMetaEnv {
+    readonly VITE_GEMINI_API_KEY: string
+  }
+}
+
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+if (!apiKey) {
+    throw new Error("VITE_GEMINI_API_KEY environment variable not set");
+}
+
+const ai = new GoogleGenAI({ apiKey });
+
 // Travel Guide specific types
 export interface TripStop {
   id: string;
@@ -34,12 +48,6 @@ export interface TripPlan {
     budget: 'low' | 'medium' | 'high';
   };
 }
-
-if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY environment variable not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Vision analysis function using Gemini's vision capabilities
 export const analyzeImageWithGemini = async (imageData: string, location?: GeoLocation): Promise<string> => {

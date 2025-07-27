@@ -15,53 +15,46 @@ import SplashScreen from './components/SplashScreen';
 import GlobalLoader from './components/GlobalLoader';
 import PWAInstall from './components/PWAInstall';
 import LanguageSelector from './components/LanguageSelector';
+import AuthScreen from './components/AuthScreen';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useLanguage } from './hooks/useLanguage';
-import { useTranslations } from './services/translations';
 import PathView from './components/PathView';
 import Background from './components/Background';
 import { useSpeechSynthesis } from './hooks/useSpeechSynthesis';
 import ChatInterface from './components/ChatInterface';
-
-const ADVENTURES_STORAGE_KEY = 'echoes_adventures';
-const PROFILE_STORAGE_KEY = 'echoes_user_profile';
-
-const createDefaultProfile = (): UserProfile => ({
-  name: 'Explorer',
-  avatar: '🗺️',
-  level: 1,
-  totalPoints: 0,
-  completedQuests: 0,
-  badges: [],
-  achievements: [],
-  visitedCities: [],
-  favoriteLocations: [],
-  interests: ['history', 'culture', 'photography'],
-  joinDate: new Date()
-});
+import { useAuth } from './services/authService';
+import { 
+  getUserAdventures, 
+  saveAdventure,
+  getUserBadges,
+  getUserAchievements 
+} from './services/databaseService';
 
 const App: React.FC = () => {
-  const [appState, setAppState] = useState<AppState>(AppState.HOME);
-  const [adventures, setAdventures] = useState<Story[]>(() => {
-    try {
-      const saved = localStorage.getItem(ADVENTURES_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      console.error("Failed to load adventures from storage", e);
-      return [];
-    }
-  });
+  const { user, loading: authLoading, profile, isAuthenticated, updateProfile } = useAuth();
   
-  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
-    try {
-      const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : createDefaultProfile();
-    } catch (e) {
-      console.error("Failed to load profile from storage", e);
-      return createDefaultProfile();
-    }
-  });
+  // Show loading screen while checking auth
+  if (authLoading) {
+    return <SplashScreen onComplete={() => {}} />;
+  }
+  
+  // Show auth screen if not authenticated
+  if (!isAuthenticated || !profile) {
+    return <AuthScreen />;
+  }
 
+  // Show main app if authenticated
+  return <AuthenticatedApp user={user!} profile={profile} updateProfile={updateProfile} />;
+};
+
+// Separate component for authenticated app logic
+const AuthenticatedApp: React.FC<{
+  user: any;
+  profile: UserProfile;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+}> = ({ user, profile, updateProfile }) => {
+  const [appState, setAppState] = useState<AppState>(AppState.HOME);
+  const [userProfile, setUserProfile] = useState<UserProfile>(profile);
   const [activeAdventure, setActiveAdventure] = useState<Story | null>(null);
   const [isLibraryOpen, setIsLibraryOpen] = useState<boolean>(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState<boolean>(false);
@@ -74,9 +67,11 @@ const App: React.FC = () => {
   const [showPWAInstall, setShowPWAInstall] = useState<boolean>(false);
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
 
+  // Load adventures from database instead of localStorage
+  const [adventures, setAdventures] = useState<Story[]>([]);
+
   const { location: userLocation, error: geoError } = useGeolocation();
-  const { selectedLanguage, changeLanguage } = useLanguage();
-  const t = useTranslations(selectedLanguage.code);
+  const { selectedLanguage } = useLanguage();
   
   const { 
     speak: synthSpeak, 
@@ -85,6 +80,36 @@ const App: React.FC = () => {
   } = useSpeechSynthesis(selectedLanguage.code);
 
   const [speakingTextKey, setSpeakingTextKey] = useState<string | null>(null);
+
+  // Load user data from database on component mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (user?.id) {
+        try {
+          // Load adventures from database
+          const userAdventures = await getUserAdventures(user.id);
+          setAdventures(userAdventures);
+          
+          // Load badges and achievements
+          const [badges, achievements] = await Promise.all([
+            getUserBadges(user.id),
+            getUserAchievements(user.id)
+          ]);
+          
+          // Update profile with loaded data
+          setUserProfile(prev => ({
+            ...prev,
+            badges,
+            achievements
+          }));
+        } catch (error) {
+          console.error('Error loading user data:', error);
+        }
+      }
+    };
+    
+    loadUserData();
+  }, [user?.id]);
 
   const speak = useCallback((text: string, key: string) => {
     if (isSpeaking && speakingTextKey === key) {
@@ -104,45 +129,52 @@ const App: React.FC = () => {
     setSpeakingTextKey(null);
   }, [synthCancel]);
 
-  // Save data to localStorage
+  // Save data to database instead of localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem(ADVENTURES_STORAGE_KEY, JSON.stringify(adventures));
-    } catch (e) {
-      console.error("Failed to save adventures to storage", e);
-    }
-  }, [adventures]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(userProfile));
-    } catch (e) {
-      console.error("Failed to save profile to storage", e);
-    }
-  }, [userProfile]);
-
-  const updateUserProfile = useCallback((newProfile: UserProfile) => {
-    setUserProfile(newProfile);
-  }, []);
-
-  const awardPoints = useCallback((points: number, source: string) => {
-    setUserProfile(prev => {
-      const newTotalPoints = prev.totalPoints + points;
-      const newLevel = Math.floor(newTotalPoints / 1000) + 1;
-      
-      // Check for level up
-      if (newLevel > prev.level) {
-        console.log(`Level up! Now level ${newLevel}`);
+    const saveAdventuresToDB = async () => {
+      if (user?.id && adventures.length > 0) {
+        try {
+          // Save each adventure to database
+          for (const adventure of adventures) {
+            await saveAdventure(user.id, adventure);
+          }
+        } catch (error) {
+          console.error("Failed to save adventures to database", error);
+        }
       }
+    };
+    
+    saveAdventuresToDB();
+  }, [adventures, user?.id]);
 
-      return {
-        ...prev,
-        totalPoints: newTotalPoints,
-        level: newLevel,
-        completedQuests: prev.completedQuests + (source === 'quest' ? 1 : 0)
-      };
-    });
-  }, []);
+  // Update profile in database
+  const updateUserProfileHandler = useCallback(async (newProfile: UserProfile) => {
+    setUserProfile(newProfile);
+    
+    if (user?.id) {
+      try {
+        await updateProfile(newProfile);
+      } catch (error) {
+        console.error("Failed to update profile in database", error);
+      }
+    }
+  }, [user?.id, updateProfile]);
+
+  const awardPoints = useCallback(async (points: number, source: string) => {
+    const updatedProfile = {
+      ...userProfile,
+      totalPoints: userProfile.totalPoints + points,
+      level: Math.floor((userProfile.totalPoints + points) / 1000) + 1,
+      completedQuests: userProfile.completedQuests + (source === 'quest' ? 1 : 0)
+    };
+    
+    // Check for level up
+    if (updatedProfile.level > userProfile.level) {
+      console.log(`Level up! Now level ${updatedProfile.level}`);
+    }
+
+    await updateUserProfileHandler(updatedProfile);
+  }, [userProfile, updateUserProfileHandler]);
 
   const handleStartAdventure = useCallback(async (location: string) => {
     setIsLoading(true);
@@ -437,7 +469,7 @@ const App: React.FC = () => {
           <div className="absolute inset-0 z-30 bg-white overflow-y-auto">
             <ProfileView
               profile={userProfile}
-              onUpdateProfile={updateUserProfile}
+              onUpdateProfile={updateUserProfileHandler}
               onClose={() => setAppState(AppState.HOME)}
             />
           </div>

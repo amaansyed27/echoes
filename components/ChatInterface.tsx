@@ -125,8 +125,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       recognitionRef.current = recognition;
     }
 
-    // FIX 1: The cleanup function is now correct and only aborts speech recognition.
-    // It no longer interferes with speech synthesis.
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.abort();
@@ -177,29 +175,32 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       setMessages((prev: ChatMessage[]) => [...prev, aiMessage]);
       
+      // FIX: This block enables the AI to speak automatically.
       if (voiceResponseEnabled && response && response.trim()) {
+        // A short delay ensures the message bubble renders before speech starts.
         setTimeout(() => {
-          if (window.speechSynthesis && isSupported) {
-            speak({
-              text: response,
-              onEnd: () => {
-                console.log('Finished speaking AI response');
-              }
-            });
-          } else {
-            console.error('Speech synthesis not available when trying to speak response');
-          }
+          speak({
+            text: response,
+            onEnd: () => {
+              console.log('Finished speaking AI response');
+            }
+          });
         }, 200);
       }
     } catch (error) {
       console.error('Chat error:', error);
       const errorMessage = 'I apologize, but I seem to have lost my connection. Please try again.';
-      setMessages((prev: ChatMessage[]) => [...prev, {
+      const errorAiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        type: 'ai',
+        type: "ai",
         content: errorMessage,
         timestamp: new Date()
-      }]);
+      };
+      setMessages((prev: ChatMessage[]) => [...prev, errorAiMessage]);
+      // Also speak the error message
+      if (voiceResponseEnabled) {
+        setTimeout(() => speak({ text: errorMessage, onEnd: () => {} }), 200);
+      }
     } finally {
       setIsTyping(false);
     }
@@ -215,7 +216,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       console.log('Stopping voice recognition');
       recognitionRef.current.stop();
     } else {
-      // FIX 2: If the AI is speaking, stop it before listening to the user.
       if (isSpeaking && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
