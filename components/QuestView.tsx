@@ -65,15 +65,15 @@ const QuestView: React.FC<QuestViewProps> = ({
     <div className="w-full max-w-4xl mx-auto animate-fade-in">
        <button 
         onClick={onBackToPath}
-        className="flex items-center space-x-2 text-amber-300 hover:text-amber-200 transition-colors mb-4 group"
+        className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors mb-4 group"
         >
            <ChevronLeftIcon className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
            <span className="font-semibold">Back to Path</span>
        </button>
       
-      <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl backdrop-blur-lg border border-gray-700 mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-amber-300 font-cinzel mb-4">{currentQuest.title}</h1>
-        <div className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed whitespace-pre-wrap">
+      <div className="bg-white p-6 md:p-8 rounded-xl shadow-card border border-gray-200 mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">{currentQuest.title}</h1>
+        <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
             {currentQuest.narrative}
         </div>
       </div>

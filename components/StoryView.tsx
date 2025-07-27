@@ -55,25 +55,25 @@ const StoryView: React.FC<StoryViewProps> = ({
 
   return (
     <div className="w-full max-w-4xl mx-auto animate-fade-in">
-      <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl backdrop-blur-lg border border-gray-700 mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-amber-300 font-cinzel mb-4">{currentQuest.title}</h1>
+      <div className="bg-white p-6 md:p-8 rounded-xl shadow-card border border-gray-200 mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">{currentQuest.title}</h1>
         <div className="flex items-center space-x-4 mb-6">
           <button
             onClick={handlePlayPause}
-            className="p-3 bg-amber-500 text-gray-900 rounded-full hover:bg-amber-400 transition-colors"
+            className="p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
             aria-label={isSpeaking && !isPaused ? "Pause narration" : "Play narration"}
           >
             {isSpeaking && !isPaused ? <PauseIcon className="w-6 h-6" /> : <PlayIcon className="w-6 h-6" />}
           </button>
           <button
             onClick={cancel}
-            className="p-3 bg-gray-700 text-gray-300 rounded-full hover:bg-gray-600 transition-colors"
+            className="p-3 bg-gray-200 text-gray-600 rounded-full hover:bg-gray-300 transition-colors"
             aria-label="Stop narration"
           >
             <StopIcon className="w-6 h-6" />
           </button>
         </div>
-        <div className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed whitespace-pre-wrap">
+        <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
             {currentQuest.narrative}
         </div>
       </div>

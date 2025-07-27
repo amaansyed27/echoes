@@ -81,20 +81,20 @@ const Explore: React.FC<ExploreProps> = ({
     <div
       key={location.id}
       onClick={() => handleStartJourney(location)}
-      className="bg-gray-800/90 rounded-xl p-4 border border-gray-600 active:scale-95 transition-all duration-200 cursor-pointer hover:border-amber-400"
+      className="bg-white rounded-xl p-4 shadow-card border border-gray-200 active:scale-95 transition-all duration-200 cursor-pointer hover:shadow-card-hover hover:border-blue-300"
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-1">
             <span className="text-xl">{location.image || '📍'}</span>
-            <h3 className="text-lg font-semibold text-white">{location.name}</h3>
+            <h3 className="text-lg font-semibold text-gray-800">{location.name}</h3>
           </div>
-          <p className="text-sm text-gray-300 mb-2">{location.description}</p>
+          <p className="text-sm text-gray-600 mb-2">{location.description}</p>
           {location.distance && (
-            <p className="text-xs text-amber-400">{location.distance.toFixed(1)} km away</p>
+            <p className="text-xs text-blue-600">{location.distance.toFixed(1)} km away</p>
           )}
           {location.country && (
-            <p className="text-xs text-gray-400">{location.country}</p>
+            <p className="text-xs text-gray-500">{location.country}</p>
           )}
         </div>
       </div>
@@ -102,25 +102,25 @@ const Explore: React.FC<ExploreProps> = ({
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-6 pb-24">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <span className="text-3xl">🧭</span>
-            <h1 className="text-3xl font-bold text-white">Explore</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Explore</h1>
           </div>
-          <p className="text-gray-300">Discover amazing places and create new adventures</p>
+          <p className="text-gray-600">Discover amazing places and create new adventures</p>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex bg-gray-800/50 p-1 rounded-xl mb-6 border border-gray-600">
+        <div className="flex bg-white p-1 rounded-xl mb-6 border border-gray-200 shadow-sm">
           <button
             onClick={() => setActiveTab('current')}
             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
               activeTab === 'current'
-                ? 'bg-amber-500 text-black'
-                : 'text-gray-300 hover:text-white'
+                ? 'bg-blue-500 text-white'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
             }`}
           >
             📍 Current Location
@@ -129,8 +129,8 @@ const Explore: React.FC<ExploreProps> = ({
             onClick={() => setActiveTab('points')}
             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
               activeTab === 'points'
-                ? 'bg-amber-500 text-black'
-                : 'text-gray-300 hover:text-white'
+                ? 'bg-blue-500 text-white'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
             }`}
           >
             🏛️ Monuments
@@ -139,8 +139,8 @@ const Explore: React.FC<ExploreProps> = ({
             onClick={() => setActiveTab('cities')}
             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
               activeTab === 'cities'
-                ? 'bg-amber-500 text-black'
-                : 'text-gray-300 hover:text-white'
+                ? 'bg-blue-500 text-white'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
             }`}
           >
             🏙️ Cities
@@ -151,29 +151,29 @@ const Explore: React.FC<ExploreProps> = ({
         <div className="space-y-4">
           {activeTab === 'current' && (
             <div>
-              <h2 className="text-xl font-semibold text-amber-300 mb-4">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
                 📍 Near {locationName}
               </h2>
               {userLocation ? (
                 isLoadingLocations ? (
-                  <div className="bg-gray-800/90 rounded-xl p-6 text-center border border-gray-600">
-                    <div className="w-8 h-8 border-4 border-dashed rounded-full animate-spin border-amber-400 mx-auto mb-4"></div>
-                    <p className="text-gray-300">Discovering nearby adventures...</p>
+                  <div className="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
+                    <div className="w-8 h-8 border-4 border-dashed rounded-full animate-spin border-blue-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Discovering nearby adventures...</p>
                   </div>
                 ) : nearbyLocations.length > 0 ? (
                   <div className="grid gap-4">
                     {nearbyLocations.map(renderLocationCard)}
                   </div>
                 ) : (
-                  <div className="bg-gray-800/90 rounded-xl p-6 text-center border border-gray-600">
-                    <p className="text-gray-300 mb-2">🌟 No nearby adventures found within 200km</p>
-                    <p className="text-sm text-gray-400">Try exploring monuments or cities from other tabs!</p>
+                  <div className="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
+                    <p className="text-gray-700 mb-2">🌟 No nearby adventures found within 200km</p>
+                    <p className="text-sm text-gray-500">Try exploring monuments or cities from other tabs!</p>
                   </div>
                 )
               ) : (
-                <div className="bg-gray-800/90 rounded-xl p-6 text-center border border-gray-600">
-                  <p className="text-gray-300 mb-4">📍 Enable location access to discover nearby adventures</p>
-                  <button className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-black rounded-lg font-medium">
+                <div className="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
+                  <p className="text-gray-700 mb-4">📍 Enable location access to discover nearby adventures</p>
+                  <button className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium">
                     Enable Location
                   </button>
                 </div>
@@ -183,11 +183,11 @@ const Explore: React.FC<ExploreProps> = ({
 
           {activeTab === 'points' && (
             <div>
-              <h2 className="text-xl font-semibold text-amber-300 mb-4">🏛️ Monuments & Landmarks</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">🏛️ Monuments & Landmarks</h2>
               {isLoadingLocations ? (
-                <div className="bg-gray-800/90 rounded-xl p-6 text-center border border-gray-600">
-                  <div className="w-8 h-8 border-4 border-dashed rounded-full animate-spin border-amber-400 mx-auto mb-4"></div>
-                  <p className="text-gray-300">Loading world monuments...</p>
+                <div className="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
+                  <div className="w-8 h-8 border-4 border-dashed rounded-full animate-spin border-blue-500 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading world monuments...</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -199,11 +199,11 @@ const Explore: React.FC<ExploreProps> = ({
 
           {activeTab === 'cities' && (
             <div>
-              <h2 className="text-xl font-semibold text-amber-300 mb-4">🏙️ World Cities</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">🏙️ World Cities</h2>
               {isLoadingLocations ? (
-                <div className="bg-gray-800/90 rounded-xl p-6 text-center border border-gray-600">
-                  <div className="w-8 h-8 border-4 border-dashed rounded-full animate-spin border-amber-400 mx-auto mb-4"></div>
-                  <p className="text-gray-300">Loading world cities...</p>
+                <div className="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
+                  <div className="w-8 h-8 border-4 border-dashed rounded-full animate-spin border-blue-500 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading world cities...</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -216,11 +216,11 @@ const Explore: React.FC<ExploreProps> = ({
 
         {/* Loading Overlay */}
         {isLoading && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-gray-800 p-6 rounded-xl border border-gray-600 text-center">
-              <div className="w-12 h-12 border-4 border-dashed rounded-full animate-spin border-amber-400 mx-auto mb-4"></div>
-              <p className="text-white font-medium">Creating your adventure...</p>
-              <p className="text-gray-400 text-sm">This may take a moment</p>
+          <div className="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg text-center">
+              <div className="w-12 h-12 border-4 border-dashed rounded-full animate-spin border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-800 font-medium">Creating your adventure...</p>
+              <p className="text-gray-500 text-sm">This may take a moment</p>
             </div>
           </div>
         )}

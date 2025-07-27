@@ -22,43 +22,43 @@ const PathNode: React.FC<{
   isSpeaking: boolean; 
 }> = ({ quest, index, isCompleted, isCurrent, onSpeak, isSpeaking }) => {
   const getNodeStyle = () => {
-    if (isCurrent) return 'bg-amber-400 border-amber-300';
-    if (isCompleted) return 'bg-green-500 border-green-400';
-    return 'bg-white/20 border-white/30';
+    if (isCurrent) return 'bg-blue-500 border-blue-400 text-white';
+    if (isCompleted) return 'bg-green-500 border-green-400 text-white';
+    return 'bg-white border-gray-300 text-gray-400';
   };
 
   const getCardStyle = () => {
-    if (isCurrent) return 'bg-amber-400/20 border-amber-400/50';
-    if (isCompleted) return 'bg-green-500/20 border-green-500/50';
-    return 'bg-white/10 border-white/20';
+    if (isCurrent) return 'bg-blue-50 border-blue-200';
+    if (isCompleted) return 'bg-green-50 border-green-200';
+    return 'bg-gray-50 border-gray-200';
   };
 
   return (
     <div className="flex items-start space-x-4 mb-6">
       {/* Node */}
-      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-gray-900 border-2 transition-all ${getNodeStyle()}`}>
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 transition-all ${getNodeStyle()}`}>
         {isCompleted ? (
-          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
           </svg>
         ) : (
-          <span className="text-white">{index + 1}</span>
+          <span>{index + 1}</span>
         )}
       </div>
       
       {/* Quest Card */}
-      <div className={`flex-1 backdrop-blur-sm border rounded-2xl p-4 transition-all ${getCardStyle()}`}>
+      <div className={`flex-1 border rounded-lg p-4 transition-all shadow-sm ${getCardStyle()}`}>
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="font-bold text-white mb-1">{quest.title}</h3>
-            <p className="text-sm text-white/60">{quest.targetLocationName}</p>
+            <h3 className="font-bold text-gray-800 mb-1">{quest.title}</h3>
+            <p className="text-sm text-gray-500">{quest.targetLocationName}</p>
           </div>
           <button 
             onClick={onSpeak} 
-            className="p-2 rounded-full bg-white/10 active:scale-95 transition-transform"
+            className="p-2 rounded-full bg-gray-100 active:scale-95 transition-transform"
           >
             <svg 
-              className={`w-5 h-5 ${isSpeaking ? 'text-amber-400 animate-pulse' : 'text-white/60'}`} 
+              className={`w-5 h-5 ${isSpeaking ? 'text-blue-500 animate-pulse' : 'text-gray-400'}`} 
               fill="currentColor" 
               viewBox="0 0 20 20"
             >
@@ -88,7 +88,7 @@ const PathView: React.FC<PathViewProps> = ({
       {/* Back Button */}
       <button 
         onClick={onBack}
-        className="flex items-center space-x-2 text-white/80 active:scale-95 transition-transform"
+        className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 active:scale-95 transition-transform"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -97,34 +97,34 @@ const PathView: React.FC<PathViewProps> = ({
       </button>
 
       {/* Adventure Header */}
-      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6">
-        <h1 className="text-2xl font-bold text-white mb-2">{adventure.title}</h1>
-        <p className="text-white/60 mb-4">Journey through {adventure.destination.name}</p>
+      <div className="bg-white rounded-xl p-6 shadow-card border border-gray-200">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">{adventure.title}</h1>
+        <p className="text-gray-500 mb-4">Journey through {adventure.destination.name}</p>
         
         {/* Progress */}
         <div className="mb-4">
-          <div className="flex justify-between text-sm text-white/60 mb-2">
+          <div className="flex justify-between text-sm text-gray-500 mb-2">
             <span>Progress</span>
             <span>{adventure.currentQuestIndex} / {adventure.quests.length} quests</span>
           </div>
-          <div className="bg-white/10 rounded-full h-2">
+          <div className="bg-gray-100 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-amber-400 to-orange-500 h-2 rounded-full transition-all duration-500"
+              className="bg-blue-500 h-2 rounded-full transition-all duration-500"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
         </div>
 
         {/* Introduction */}
-        <div className="bg-white/10 border border-white/20 rounded-2xl p-4">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
           <div className="flex items-start justify-between">
-            <p className="text-white/80 text-sm leading-relaxed flex-1">{adventure.introNarrative}</p>
+            <p className="text-gray-700 text-sm leading-relaxed flex-1">{adventure.introNarrative}</p>
             <button 
               onClick={() => speak(adventure.introNarrative, adventure.id)} 
-              className="ml-3 p-2 rounded-full bg-white/10 active:scale-95 transition-transform flex-shrink-0"
+              className="ml-3 p-2 rounded-full bg-gray-100 active:scale-95 transition-transform flex-shrink-0"
             >
               <svg 
-                className={`w-5 h-5 ${isSpeaking && speakingTextKey === adventure.id ? 'text-amber-400 animate-pulse' : 'text-white/60'}`} 
+                className={`w-5 h-5 ${isSpeaking && speakingTextKey === adventure.id ? 'text-blue-500 animate-pulse' : 'text-gray-400'}`} 
                 fill="currentColor" 
                 viewBox="0 0 20 20"
               >
@@ -137,12 +137,12 @@ const PathView: React.FC<PathViewProps> = ({
       </div>
 
       {/* Quest Path */}
-      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6">
-        <h2 className="text-lg font-bold text-white mb-4">Quest Path</h2>
+      <div className="bg-white rounded-xl p-6 shadow-card border border-gray-200">
+        <h2 className="text-lg font-bold text-gray-800 mb-4">Quest Path</h2>
         
         <div className="relative">
           {/* Connecting line */}
-          <div className="absolute left-5 top-5 bottom-0 w-0.5 bg-white/20" 
+          <div className="absolute left-5 top-5 bottom-0 w-0.5 bg-gray-200" 
                style={{ height: `${(adventure.quests.length - 1) * 88}px` }} />
           
           {adventure.quests.map((quest, index) => (
@@ -163,7 +163,7 @@ const PathView: React.FC<PathViewProps> = ({
       <button
         onClick={onStartQuest}
         disabled={isAdventureComplete}
-        className="w-full bg-amber-400 text-gray-900 py-4 rounded-2xl font-bold text-lg active:scale-95 transition-transform disabled:bg-white/20 disabled:text-white/50 disabled:scale-100"
+        className="w-full bg-blue-500 text-white py-4 rounded-lg font-bold text-lg active:scale-95 transition-transform disabled:bg-gray-200 disabled:text-gray-400 disabled:scale-100"
       >
         {isAdventureComplete 
           ? '🎉 Adventure Complete!' 

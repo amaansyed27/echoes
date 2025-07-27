@@ -19,7 +19,7 @@ const Background: React.FC = () => {
     });
 
     const particles: Particle[] = [];
-    const particleCount = 50;
+    const particleCount = 30; // Reduced for better performance on mobile
 
     class Particle {
       x: number;
@@ -32,10 +32,10 @@ const Background: React.FC = () => {
       constructor() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.vx = Math.random() * 0.4 - 0.2;
-        this.vy = Math.random() * 0.4 - 0.2;
-        this.radius = Math.random() * 1.5 + 0.5;
-        this.color = 'rgba(251, 191, 36, 0.5)'; // amber-400 with opacity
+        this.vx = Math.random() * 0.3 - 0.15;
+        this.vy = Math.random() * 0.3 - 0.15;
+        this.radius = Math.random() * 1 + 0.5;
+        this.color = 'rgba(59, 130, 246, 0.15)'; // blue-500 with low opacity for light theme
       }
 
       update() {
@@ -78,7 +78,7 @@ const Background: React.FC = () => {
 
           if (distance < 150) {
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(251, 191, 36, ${1 - distance / 150})`;
+            ctx.strokeStyle = `rgba(59, 130, 246, ${1 - distance / 150})`; // Changed to blue-500
             ctx.lineWidth = 0.2;
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
@@ -102,7 +102,7 @@ const Background: React.FC = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed top-0 left-0 w-full h-full bg-gray-900 z-0"
+      className="fixed top-0 left-0 w-full h-full bg-gray-50 z-0"
     ></canvas>
   );
 };

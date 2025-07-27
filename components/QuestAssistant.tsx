@@ -139,25 +139,25 @@ const QuestAssistant: React.FC<QuestAssistantProps> = ({
 
   return (
     <div className="fixed inset-x-0 bottom-16 z-50 mx-4 mb-4">
-      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl shadow-2xl max-h-96 flex flex-col">
+      <div className="bg-white backdrop-blur-md border border-gray-200 rounded-3xl shadow-lg max-h-96 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center">
-              <span className="text-gray-900 font-bold text-sm">AI</span>
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">AI</span>
             </div>
             <div>
-              <h3 className="font-semibold text-white text-sm">Quest Assistant</h3>
+              <h3 className="font-semibold text-gray-800 text-sm">Quest Assistant</h3>
               {questContext && (
-                <p className="text-xs text-white/60">{questContext.title}</p>
+                <p className="text-xs text-gray-500">{questContext.title}</p>
               )}
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-white/10 active:scale-95 transition-transform"
+            className="p-2 rounded-full bg-gray-100 active:scale-95 transition-transform"
           >
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -173,8 +173,8 @@ const QuestAssistant: React.FC<QuestAssistantProps> = ({
               <div
                 className={`max-w-[80%] p-3 rounded-2xl text-sm ${
                   message.type === 'user'
-                    ? 'bg-amber-400 text-gray-900'
-                    : 'bg-white/10 backdrop-blur-sm text-white border border-white/20'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-800 border border-gray-200'
                 }`}
               >
                 <p className="leading-relaxed">{message.content}</p>
@@ -192,11 +192,11 @@ const QuestAssistant: React.FC<QuestAssistantProps> = ({
           
           {isTyping && (
             <div className="flex justify-start">
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 p-3 rounded-2xl">
+              <div className="bg-gray-100 border border-gray-200 p-3 rounded-2xl">
                 <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
               </div>
             </div>
@@ -212,7 +212,7 @@ const QuestAssistant: React.FC<QuestAssistantProps> = ({
               <button
                 key={index}
                 onClick={() => sendMessage(action)}
-                className="px-3 py-1 bg-white/10 text-white rounded-full text-xs border border-white/20 active:scale-95 transition-transform"
+                className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs border border-gray-200 active:scale-95 transition-transform hover:bg-gray-200"
               >
                 {action}
               </button>
@@ -221,7 +221,7 @@ const QuestAssistant: React.FC<QuestAssistantProps> = ({
         </div>
 
         {/* Input */}
-        <form onSubmit={handleSubmit} className="p-4 border-t border-white/10">
+        <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
           <div className="flex items-center space-x-2">
             <div className="flex-1 relative">
               <input
@@ -229,7 +229,7 @@ const QuestAssistant: React.FC<QuestAssistantProps> = ({
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder={voiceState.isListening ? "Listening..." : "Ask for help..."}
-                className="w-full px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm"
+                className="w-full px-4 py-2 bg-white border border-gray-300 rounded-2xl text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm"
                 disabled={voiceState.isListening || isTyping}
               />
             </div>
@@ -241,10 +241,10 @@ const QuestAssistant: React.FC<QuestAssistantProps> = ({
                 className={`p-2 rounded-2xl transition-all active:scale-95 ${
                   voiceState.isListening 
                     ? 'bg-red-500 animate-pulse' 
-                    : 'bg-white/10 backdrop-blur-sm border border-white/20'
+                    : 'bg-gray-100 border border-gray-300'
                 }`}
               >
-                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
                 </svg>
               </button>
@@ -253,7 +253,7 @@ const QuestAssistant: React.FC<QuestAssistantProps> = ({
             <button
               type="submit"
               disabled={!inputText.trim() || isTyping}
-              className="p-2 bg-amber-400 text-gray-900 rounded-2xl active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+              className="p-2 bg-blue-500 text-white rounded-2xl active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

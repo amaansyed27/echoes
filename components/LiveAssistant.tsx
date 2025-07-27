@@ -15,6 +15,7 @@ interface LiveAssistantProps {
 
 const LiveAssistant: React.FC<LiveAssistantProps> = ({
   currentCity,
+  currentLocation,
   currentQuest,
   isVisible = true
 }) => {
@@ -110,12 +111,17 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({
     lastAutoMessageRef.current = new Date();
 
     try {
-      const guidancePrompt = `Provide a brief, encouraging guidance for the current quest: ${currentQuest.title}. 
-                             Keep it under 30 words and motivational.`;
+      // Enhanced with location awareness
+      const locationContext = currentLocation 
+        ? `Your current location: Latitude ${currentLocation.latitude}, Longitude ${currentLocation.longitude}. ${currentCity ? `You are in ${currentCity}.` : ''}`
+        : currentCity ? `You are in ${currentCity}.` : 'Your location is unknown.';
+
+      const guidancePrompt = `Provide a brief, location-aware guidance for the current quest: ${currentQuest.title}. 
+                             Include nearby surroundings if available. Keep it under 40 words and motivational.`;
 
       const response = await generateChatResponse(
         guidancePrompt,
-        `Quest: ${currentQuest.title} - ${currentQuest.description}`
+        `Quest: ${currentQuest.title} - ${currentQuest.description}. ${locationContext}`
       );
 
       const assistantMessage = { text: response, isUser: false, timestamp: new Date() };
@@ -177,7 +183,7 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({
               ? 'bg-red-500 animate-pulse' 
               : isSpeaking 
                 ? 'bg-green-500 animate-bounce'
-                : 'bg-amber-500 hover:bg-amber-600'
+                : 'bg-blue-500 hover:bg-blue-600'
           }`}
         >
           {isListening ? (
@@ -200,18 +206,18 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({
 
       {/* Expanded Assistant Panel */}
       {isExpanded && (
-        <div className="fixed inset-x-4 bottom-20 z-50 bg-gray-900/95 backdrop-blur-sm rounded-xl shadow-2xl border border-amber-400/20 max-h-96 flex flex-col">
+        <div className="fixed inset-x-4 bottom-20 z-50 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 max-h-96 flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div className="flex items-center space-x-2">
               <div className={`w-3 h-3 rounded-full ${isListening ? 'bg-red-400 animate-pulse' : 'bg-green-400'}`}></div>
-              <h3 className="text-amber-400 font-semibold">Live Assistant</h3>
+              <h3 className="text-blue-500 font-semibold">Live Assistant</h3>
             </div>
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setAutoTalkEnabled(!autoTalkEnabled)}
                 className={`px-3 py-1 rounded-full text-xs ${
-                  autoTalkEnabled ? 'bg-amber-500 text-black' : 'bg-gray-600 text-gray-300'
+                  autoTalkEnabled ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
                 }`}
               >
                 Auto-Guide
@@ -219,7 +225,7 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({
               <button
                 onClick={toggleVoiceMode}
                 className={`p-2 rounded-full ${
-                  isVoiceMode ? 'bg-red-500' : 'bg-amber-500'
+                  isVoiceMode ? 'bg-red-500' : 'bg-blue-500'
                 }`}
               >
                 {isListening ? (
@@ -235,9 +241,9 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({
               </button>
               <button
                 onClick={() => setIsExpanded(false)}
-                className="p-2 rounded-full bg-gray-600 hover:bg-gray-500"
+                className="p-2 rounded-full bg-gray-200 hover:bg-gray-300"
               >
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M19 13H5v-2h14v2z"/>
                 </svg>
               </button>
@@ -247,7 +253,7 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-60">
             {assistantMessages.length === 0 && (
-              <div className="text-center text-gray-400 py-8">
+              <div className="text-center text-gray-500 py-8">
                 <p>🎙️ Press the microphone to talk with your assistant</p>
                 <p className="text-sm mt-2">I can help guide you through your current quest!</p>
               </div>
@@ -261,8 +267,8 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({
                 <div
                   className={`max-w-[80%] p-3 rounded-lg ${
                     message.isUser
-                      ? 'bg-amber-500 text-black'
-                      : 'bg-gray-700 text-white'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-800'
                   }`}
                 >
                   <p className="text-sm">{message.text}</p>
@@ -275,11 +281,11 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({
             
             {isProcessing && (
               <div className="flex justify-start">
-                <div className="bg-gray-700 p-3 rounded-lg">
+                <div className="bg-gray-100 p-3 rounded-lg">
                   <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                   </div>
                 </div>
               </div>
@@ -288,15 +294,15 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({
 
           {/* Voice Input Indicator */}
           {(isListening || interimTranscript) && (
-            <div className="px-4 py-2 border-t border-gray-700 bg-gray-800/50">
+            <div className="px-4 py-2 border-t border-gray-200 bg-gray-50">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-300">
+                <span className="text-sm text-gray-600">
                   {isListening ? 'Listening...' : 'Processing...'}
                 </span>
               </div>
               {interimTranscript && (
-                <p className="text-sm text-amber-300 mt-1 italic">
+                <p className="text-sm text-blue-500 mt-1 italic">
                   "{interimTranscript}"
                 </p>
               )}

@@ -1,22 +1,24 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { AppState, Story, CompletedQuest, UserProfile } from './types';
 import { generateTravelGuide } from './services/geminiService';
-import Header from './components/Header';
 import QuestView from './components/QuestView';
 import LibraryModal from './components/LibraryModal';
 import ProfileView from './components/ProfileView';
 import QuestAssistant from './components/QuestAssistant';
-import Explore from './components/Explore';
-import BottomNavigation from './components/BottomNavigation';
+import Memories from './components/Memories';
+import TravelGuide from './components/TravelGuide';
+import Adventures from './components/Adventures';
+import NewHome from './components/NewHome';
+import BottomNavigation from './components/BottomNavigationNew';
 import LiveAssistant from './components/LiveAssistant';
 import SplashScreen from './components/SplashScreen';
 import GlobalLoader from './components/GlobalLoader';
 import PWAInstall from './components/PWAInstall';
 import { useGeolocation } from './hooks/useGeolocation';
-import Home from './components/Home';
 import PathView from './components/PathView';
 import Background from './components/Background';
 import { useSpeechSynthesis } from './hooks/useSpeechSynthesis';
+import ChatInterface from './components/ChatInterface';
 
 const ADVENTURES_STORAGE_KEY = 'echoes_adventures';
 const PROFILE_STORAGE_KEY = 'echoes_user_profile';
@@ -67,6 +69,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingMessage, setLoadingMessage] = useState<string>('');
   const [showPWAInstall, setShowPWAInstall] = useState<boolean>(false);
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
 
   const { location: userLocation, error: geoError } = useGeolocation();
   const { 
@@ -168,20 +171,6 @@ const App: React.FC = () => {
       setLoadingMessage('');
     }
   }, [userProfile.visitedCities]);
-
-  const handleCreateAdventureFromExplore = useCallback((adventure: Story) => {
-    setAdventures(prev => [adventure, ...prev]);
-    setActiveAdventure(adventure);
-    setAppState(AppState.PATH_VIEW);
-
-    // Add destination to visited cities
-    if (!userProfile.visitedCities.includes(adventure.destination.name)) {
-      setUserProfile(prev => ({
-        ...prev,
-        visitedCities: [...prev.visitedCities, adventure.destination.name]
-      }));
-    }
-  }, [userProfile.visitedCities]);
   
   const handleSelectAdventure = (adventureId: string) => {
     const adventure = adventures.find(a => a.id === adventureId);
@@ -191,14 +180,26 @@ const App: React.FC = () => {
     }
   };
 
-  const handleQuestComplete = useCallback((completedQuestData: Omit<CompletedQuest, 'quest'>) => {
+  const handleQuestComplete = useCallback((completedQuestData: Omit<CompletedQuest, 'quest' | 'completedDate' | 'location'>) => {
     if (!activeAdventure) return;
 
     const currentQuest = activeAdventure.quests[activeAdventure.currentQuestIndex];
     
+    const completedQuest: CompletedQuest = {
+      quest: currentQuest,
+      ...completedQuestData,
+      completedDate: new Date(),
+      location: {
+        latitude: currentQuest.latitude,
+        longitude: currentQuest.longitude,
+        name: currentQuest.targetLocationName,
+        country: activeAdventure.destination.name.split(',').pop()?.trim() || 'Unknown'
+      }
+    };
+    
     const updatedAdventure: Story = {
         ...activeAdventure,
-        completedQuests: [...activeAdventure.completedQuests, { quest: currentQuest, ...completedQuestData }],
+        completedQuests: [...activeAdventure.completedQuests, completedQuest],
         currentQuestIndex: activeAdventure.currentQuestIndex + 1,
     };
     
@@ -227,8 +228,12 @@ const App: React.FC = () => {
       handleHomeClick();
     } else if (newState === AppState.PROFILE) {
       setAppState(AppState.PROFILE);
-    } else if (newState === AppState.EXPLORE) {
-      setAppState(AppState.EXPLORE);
+    } else if (newState === AppState.ADVENTURES) {
+      setAppState(AppState.ADVENTURES);
+    } else if (newState === AppState.TRAVEL_GUIDE) {
+      setAppState(AppState.TRAVEL_GUIDE);
+    } else if (newState === AppState.MEMORIES) {
+      setAppState(AppState.MEMORIES);
     }
     setIsAssistantOpen(false);
   };
@@ -248,7 +253,7 @@ const App: React.FC = () => {
       case AppState.ADVENTURE_LOADING:
         return (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-amber-400"></div>
+            <div className="w-16 h-16 border-4 border-dashed animate-spin border-amber-400"></div>
             <p className="mt-4 text-xl font-bold text-amber-300">Creating Your Adventure...</p>
             <p className="text-white/60">Please wait while we craft your unique journey.</p>
           </div>
@@ -284,31 +289,54 @@ const App: React.FC = () => {
           );
         }
         return null;
-      case AppState.EXPLORE:
+      case AppState.ADVENTURES:
         return (
-          <Explore
-            userProfile={userProfile}
-            userLocation={userLocation || undefined}
-            onCreateAdventure={handleCreateAdventureFromExplore}
-          />
-        );
-      case AppState.PROFILE:
-        return (
-          <ProfileView
-            profile={userProfile}
-            onUpdateProfile={updateUserProfile}
-            onClose={() => setAppState(AppState.HOME)}
-          />
-        );
-      case AppState.HOME:
-      default:
-        return (
-          <Home 
+          <Adventures 
             onStart={handleStartAdventure} 
             error={error} 
             adventures={adventures}
             onSelectAdventure={handleSelectAdventure}
             userProfile={userProfile}
+          />
+        );
+      case AppState.TRAVEL_GUIDE:
+        return (
+          <TravelGuide
+            userProfile={userProfile}
+            userLocation={userLocation}
+          />
+        );
+      case AppState.MEMORIES:
+        return (
+          <Memories
+            adventures={adventures}
+            userProfile={userProfile}
+          />
+        );
+      case AppState.PROFILE:
+        // Profile is now rendered as a drawer in the main component
+        return null;
+      case AppState.HOME:
+      default:
+        return (
+          <NewHome 
+            userProfile={userProfile}
+            adventures={adventures}
+            onNavigate={(page: string) => {
+              switch (page) {
+                case 'adventures':
+                  setAppState(AppState.ADVENTURES);
+                  break;
+                case 'travel_guide':
+                  setAppState(AppState.TRAVEL_GUIDE);
+                  break;
+                case 'memories':
+                  setAppState(AppState.MEMORIES);
+                  break;
+                default:
+                  break;
+              }
+            }}
           />
         );
     }
@@ -348,39 +376,51 @@ const App: React.FC = () => {
         <PWAInstall onClose={handlePWAInstallClose} />
       )}
 
-      <div className="relative min-h-screen text-gray-200 flex flex-col overflow-hidden">
+      <div className="relative min-h-screen text-gray-800 flex flex-col overflow-hidden">
         <Background />
-        <div className="relative z-10 flex flex-col h-screen bg-gray-900/80 backdrop-blur-sm">
-          {/* Header - only show on non-profile pages */}
-          {!showSplash && appState !== AppState.PROFILE && (
-            <Header 
-              onHomeClick={handleHomeClick}
-              onChatClick={() => setIsAssistantOpen(!isAssistantOpen)}
-              onProfileClick={() => setAppState(AppState.PROFILE)}
-              onInstallClick={() => setShowPWAInstall(true)}
-              userProfile={userProfile}
-            />
-          )}
-        
+        <div className="relative z-10 flex flex-col h-screen bg-white/90 backdrop-blur-sm">
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-4 pb-20">
+        <main className={`flex-1 ${appState === AppState.PROFILE ? 'overflow-y-auto' : 'overflow-y-auto'} p-4 pb-20`}>
           {renderContent()}
         </main>
         
-        {/* Bottom Navigation */}
+        {/* Bottom Navigation with Profile Integration */}
         <BottomNavigation
           currentState={appState}
           onStateChange={handleStateChange}
           questProgress={getQuestProgress()}
+          onChatClick={() => setIsChatOpen(true)}
         />
         
-        {/* Quest Assistant - contextual help */}
+        {/* Profile View */}
+        {appState === AppState.PROFILE && (
+          <div className="absolute inset-0 z-30 bg-white overflow-y-auto">
+            <ProfileView
+              profile={userProfile}
+              onUpdateProfile={updateUserProfile}
+              onClose={() => setAppState(AppState.HOME)}
+            />
+          </div>
+        )}
+        
+        {/* Chat Interface */}
+        {isChatOpen && (
+          <ChatInterface
+            userProfile={userProfile}
+            currentLocation={userLocation || undefined}
+            currentCity={activeAdventure?.destination.name}
+            questContext={activeAdventure?.quests[activeAdventure?.currentQuestIndex]}
+            onClose={() => setIsChatOpen(false)}
+          />
+        )}
+        
+        {/* Quest Assistant - contextual help (now part of journey) */}
         <QuestAssistant
           userProfile={userProfile}
           currentLocation={userLocation || undefined}
           currentCity={activeAdventure?.destination.name}
           questContext={activeAdventure?.quests[activeAdventure?.currentQuestIndex]}
-          isVisible={isAssistantOpen}
+          isVisible={isAssistantOpen && (appState === AppState.QUEST_VIEW || appState === AppState.PATH_VIEW)}
           onClose={() => setIsAssistantOpen(false)}
         />
         

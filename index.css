@@ -2,10 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Atlas Theme */
+@import url('./atlas-theme.css');
+
+/* Base styles for light theme */
+body {
+  background-color: var(--atlas-gray-50);
+  color: var(--atlas-gray-900);
+}
+
 /* Custom Animations */
 @keyframes slide-up {
   from {
-    transform: translateY(100%);
+    transform: translateY(20px);
     opacity: 0;
   }
   to {
@@ -16,7 +25,7 @@
 
 @keyframes slide-down {
   from {
-    transform: translateY(-100%);
+    transform: translateY(-20px);
     opacity: 0;
   }
   to {
@@ -27,7 +36,7 @@
 
 @keyframes scale-in {
   from {
-    transform: scale(0.9);
+    transform: scale(0.95);
     opacity: 0;
   }
   to {
@@ -36,18 +45,9 @@
   }
 }
 
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @keyframes fade-in-up {
   from {
-    transform: translateY(30px);
+    transform: translateY(15px);
     opacity: 0;
   }
   to {
@@ -58,10 +58,10 @@
 
 @keyframes glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(245, 158, 11, 0.6);
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.5);
   }
 }
 
@@ -78,10 +78,6 @@
   animation: scale-in 0.2s ease-out;
 }
 
-.animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
-}
-
 .animate-fade-in-up {
   animation: fade-in-up 0.6s ease-out;
 }
@@ -93,11 +89,95 @@
 /* Mobile-specific styles */
 @media (max-width: 768px) {
   .safe-area-pb {
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: max(env(safe-area-inset-bottom), 16px);
+  }
+  
+  /* Optimize touch targets for mobile */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better spacing for mobile cards */
+  .space-y-3 > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  /* Larger text for better readability */
+  .text-xs {
+    font-size: 0.8rem;
   }
 }
 
-/* Backdrop blur support */
+/* Custom scrollbar for light theme */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
+/* Text truncation utilities */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Button tap highlight removal */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Touch scrolling for mobile */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent zoom on input focus (iOS) */
+@media (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px;
+  }
+}
+
+/* Scale utilities for mobile optimization */
+.active\:scale-98:active {
+  transform: scale(0.98);
+}
+
+.active\:scale-95:active {
+  transform: scale(0.95);
+}
+
+/* Shadow utilities for light theme */
+.shadow-card {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+}
+
+.shadow-card-hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
 .backdrop-blur-xl {
   backdrop-filter: blur(24px);
 }

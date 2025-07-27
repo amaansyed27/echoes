@@ -1,9 +1,11 @@
 export enum AppState {
   HOME,
+  ADVENTURES,
   ADVENTURE_LOADING,
   PATH_VIEW,
   QUEST_VIEW,
-  EXPLORE,
+  TRAVEL_GUIDE,
+  MEMORIES,
   CHAT,
   PROFILE,
   ACHIEVEMENTS,
@@ -113,12 +115,37 @@ export interface Story {
   quests: Quest[];
   currentQuestIndex: number;
   completedQuests: CompletedQuest[];
+  imageUrl?: string; // URL for the adventure image
 }
 
 export interface CompletedQuest {
   quest: Quest;
   userPhoto?: string; // base64 data URL for photo quests
   userAnswer?: string; // user's answer for puzzle quests
+  completedDate: Date;
+  location: {
+    latitude: number;
+    longitude: number;
+    name: string;
+    country: string;
+  };
+}
+
+export interface Memory {
+  id: string;
+  type: 'quest' | 'adventure' | 'photo';
+  title: string;
+  description: string;
+  location: {
+    latitude: number;
+    longitude: number;
+    name: string;
+    country: string;
+  };
+  date: Date;
+  photo?: string; // base64 data URL
+  questData?: CompletedQuest;
+  adventureId?: string;
 }
 
 export interface GeoLocation {
