@@ -344,16 +344,41 @@ const App: React.FC = () => {
 
   // PWA Install Trigger Effect
   useEffect(() => {
-    // Clear for testing - remove this line in production
-    localStorage.removeItem('pwa-install-dismissed');
+    // Only clear for debugging in development
+    if (process.env.NODE_ENV === 'development') {
+      localStorage.removeItem('pwa-install-dismissed');
+    }
     
-    const timer = setTimeout(() => {
-      if (!localStorage.getItem('pwa-install-dismissed')) {
+    // Check if app is already installed (standalone mode)
+    const isStandalone = () => {
+      return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || 
+             (window.navigator as any).standalone ||
+             document.referrer.includes('android-app://');
+    };
+
+    // Listen for the beforeinstallprompt event
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      if (!localStorage.getItem('pwa-install-dismissed') && !isStandalone()) {
         setShowPWAInstall(true);
       }
-    }, 3000); // Show install prompt after 3 seconds
+    };
 
-    return () => clearTimeout(timer);
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // For development/testing only - show manual install option after delay
+    const debugTimer = setTimeout(() => {
+      if (process.env.NODE_ENV === 'development' && 
+          !isStandalone() && 
+          !localStorage.getItem('pwa-install-dismissed')) {
+        setShowPWAInstall(true);
+      }
+    }, 5000);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      clearTimeout(debugTimer);
+    };
   }, []);
 
   const handlePWAInstallClose = () => {

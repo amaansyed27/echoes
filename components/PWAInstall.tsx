@@ -25,6 +25,11 @@ const PWAInstall: React.FC<PWAInstallProps> = ({ onClose }) => {
     setIsStandalone(isInStandaloneMode());
     console.log('Is Standalone:', isInStandaloneMode());
 
+    if (isInStandaloneMode()) {
+      console.log('App is already installed, not showing install prompt');
+      return;
+    }
+
     const handler = (e: Event) => {
       console.log('beforeinstallprompt event fired');
       e.preventDefault();
@@ -34,17 +39,39 @@ const PWAInstall: React.FC<PWAInstallProps> = ({ onClose }) => {
 
     window.addEventListener('beforeinstallprompt', handler);
 
-    // For debugging: also show install prompt after 5 seconds if not standalone
-    const debugTimer = setTimeout(() => {
-      if (!isInStandaloneMode() && !localStorage.getItem('pwa-install-dismissed')) {
-        console.log('Showing manual install prompt (no beforeinstallprompt detected)');
-        setShowInstall(true);
-      }
-    }, 5000);
+    // Check if PWA criteria are met for manual fallback
+    const checkPWACriteria = () => {
+      const isHTTPS = location.protocol === 'https:' || location.hostname === 'localhost';
+      const hasServiceWorker = 'serviceWorker' in navigator;
+      const hasManifest = document.querySelector('link[rel="manifest"]');
+      
+      console.log('PWA Criteria Check:');
+      console.log('- HTTPS:', isHTTPS);
+      console.log('- Service Worker support:', hasServiceWorker);
+      console.log('- Manifest link:', !!hasManifest);
+      
+      return isHTTPS && hasServiceWorker && hasManifest;
+    };
+
+    // Only show manual install in development or if PWA criteria are met
+    const shouldShowManualInstall = process.env.NODE_ENV === 'development' || checkPWACriteria();
+    
+    if (shouldShowManualInstall) {
+      const debugTimer = setTimeout(() => {
+        if (!isInStandaloneMode() && !localStorage.getItem('pwa-install-dismissed')) {
+          console.log('Showing manual install prompt (no beforeinstallprompt detected)');
+          setShowInstall(true);
+        }
+      }, 5000);
+      
+      return () => {
+        window.removeEventListener('beforeinstallprompt', handler);
+        clearTimeout(debugTimer);
+      };
+    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
-      clearTimeout(debugTimer);
     };
   }, []);
 
