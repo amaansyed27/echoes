@@ -12,15 +12,35 @@ const NewHome: React.FC<NewHomeProps> = ({ userProfile, adventures, onNavigate }
   const activeAdventures = adventures.filter(a => a.currentQuestIndex < a.quests.length && a.currentQuestIndex > 0);
   const totalQuests = adventures.reduce((sum, a) => sum + a.completedQuests.length, 0);
 
+  // Load trip plans from localStorage
+  const getTripPlans = () => {
+    try {
+      const savedPlans = localStorage.getItem('tripPlans');
+      return savedPlans ? JSON.parse(savedPlans) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const tripPlans = getTripPlans();
+  const activeTripPlans = tripPlans.filter((plan: any) => plan.status === 'active');
+
   const quickStats = [
     { label: 'Adventures Completed', value: completedAdventures.length, icon: '🎯', color: 'text-green-600' },
     { label: 'Active Adventures', value: activeAdventures.length, icon: '🗺️', color: 'text-blue-600' },
     { label: 'Quests Completed', value: totalQuests, icon: '✅', color: 'text-purple-600' },
-    { label: 'Cities Visited', value: userProfile.visitedCities.length, icon: '🏙️', color: 'text-orange-600' }
+    { label: 'Trip Plans', value: tripPlans.length, icon: '🧭', color: 'text-orange-600' }
   ];
 
   const recentActivities = [
-    ...adventures.slice(-3).map(adventure => ({
+    ...activeTripPlans.slice(0, 2).map((plan: any) => ({
+      type: 'trip',
+      title: `Active Trip: ${plan.name}`,
+      description: `${plan.preferences.mood} journey to ${plan.destination}`,
+      time: 'In progress',
+      icon: '🧭'
+    })),
+    ...adventures.slice(-2).map(adventure => ({
       type: 'adventure',
       title: `Started: ${adventure.title}`,
       description: adventure.introNarrative.slice(0, 60) + '...',
@@ -34,7 +54,7 @@ const NewHome: React.FC<NewHomeProps> = ({ userProfile, adventures, onNavigate }
       time: '5 hours ago',
       icon: '📸'
     }
-  ];
+  ].slice(0, 4); // Limit to 4 items
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">

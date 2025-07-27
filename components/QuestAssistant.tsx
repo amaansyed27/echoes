@@ -3,6 +3,7 @@ import { ChatMessage, UserProfile, GeoLocation } from '../types';
 import { chatWithAI } from '../services/chatService';
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
+import { useLanguage } from '../hooks/useLanguage';
 
 interface QuestAssistantProps {
   userProfile?: UserProfile;
@@ -25,7 +26,8 @@ const QuestAssistant: React.FC<QuestAssistantProps> = ({
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { speak } = useSpeechSynthesis();
+  const { selectedLanguage } = useLanguage();
+  const { speak } = useSpeechSynthesis(selectedLanguage.code);
 
   // Initialize with contextual welcome message
   useEffect(() => {

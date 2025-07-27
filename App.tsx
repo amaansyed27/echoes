@@ -14,7 +14,10 @@ import LiveAssistant from './components/LiveAssistant';
 import SplashScreen from './components/SplashScreen';
 import GlobalLoader from './components/GlobalLoader';
 import PWAInstall from './components/PWAInstall';
+import LanguageSelector from './components/LanguageSelector';
 import { useGeolocation } from './hooks/useGeolocation';
+import { useLanguage } from './hooks/useLanguage';
+import { useTranslations } from './services/translations';
 import PathView from './components/PathView';
 import Background from './components/Background';
 import { useSpeechSynthesis } from './hooks/useSpeechSynthesis';
@@ -72,11 +75,14 @@ const App: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
 
   const { location: userLocation, error: geoError } = useGeolocation();
+  const { selectedLanguage, changeLanguage } = useLanguage();
+  const t = useTranslations(selectedLanguage.code);
+  
   const { 
     speak: synthSpeak, 
     cancel: synthCancel, 
     isSpeaking
-  } = useSpeechSynthesis();
+  } = useSpeechSynthesis(selectedLanguage.code);
 
   const [speakingTextKey, setSpeakingTextKey] = useState<string | null>(null);
 
@@ -144,7 +150,7 @@ const App: React.FC = () => {
     setAppState(AppState.ADVENTURE_LOADING);
     setError(null);
     try {
-      const newStoryData = await generateTravelGuide(location);
+      const newStoryData = await generateTravelGuide(location, selectedLanguage.code);
       const newAdventure: Story = {
         ...newStoryData,
         id: Date.now().toString(),
@@ -170,7 +176,7 @@ const App: React.FC = () => {
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [userProfile.visitedCities]);
+  }, [userProfile.visitedCities, selectedLanguage.code]);
   
   const handleSelectAdventure = (adventureId: string) => {
     const adventure = adventures.find(a => a.id === adventureId);
@@ -304,6 +310,8 @@ const App: React.FC = () => {
           <TravelGuide
             userProfile={userProfile}
             userLocation={userLocation}
+            activeAdventure={activeAdventure}
+            onCreateAdventure={handleStartAdventure}
           />
         );
       case AppState.MEMORIES:
@@ -404,6 +412,12 @@ const App: React.FC = () => {
       <div className="relative min-h-screen text-gray-800 flex flex-col overflow-hidden">
         <Background />
         <div className="relative z-10 flex flex-col h-screen bg-white/90 backdrop-blur-sm">
+        
+        {/* Language Selector - Top Right */}
+        <div className="absolute top-4 right-4 z-50">
+          <LanguageSelector size="sm" position="bottom-left" />
+        </div>
+        
         {/* Main Content */}
         <main className={`flex-1 ${appState === AppState.PROFILE ? 'overflow-y-auto' : 'overflow-y-auto'} p-4 pb-20`}>
           {renderContent()}
@@ -415,6 +429,7 @@ const App: React.FC = () => {
           onStateChange={handleStateChange}
           questProgress={getQuestProgress()}
           onChatClick={() => setIsChatOpen(true)}
+          hasActiveAdventure={!!activeAdventure}
         />
         
         {/* Profile View */}

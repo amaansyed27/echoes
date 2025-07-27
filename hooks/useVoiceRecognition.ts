@@ -11,12 +11,14 @@ declare global {
 
 interface UseVoiceRecognitionProps {
   onTranscript: (transcript: string) => void;
+  onError?: (error: string) => void;
   language?: string;
   continuous?: boolean;
 }
 
 export const useVoiceRecognition = ({ 
   onTranscript, 
+  onError,
   language = 'en-US', 
   continuous = false 
 }: UseVoiceRecognitionProps) => {
@@ -77,6 +79,32 @@ export const useVoiceRecognition = ({
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
+        let errorMessage = 'Speech recognition error occurred.';
+        
+        switch (event.error) {
+          case 'no-speech':
+            errorMessage = 'No speech detected. Please try again.';
+            break;
+          case 'audio-capture':
+            errorMessage = 'Audio capture failed. Check your microphone.';
+            break;
+          case 'not-allowed':
+            errorMessage = 'Microphone access denied. Please allow microphone permission.';
+            break;
+          case 'network':
+            errorMessage = 'Network error occurred. Check your connection.';
+            break;
+          case 'aborted':
+            errorMessage = 'Speech recognition was aborted.';
+            break;
+          default:
+            errorMessage = `Speech error: ${event.error}`;
+        }
+        
+        if (onError) {
+          onError(errorMessage);
+        }
+        
         setVoiceState((prev: VoiceInteraction) => ({
           ...prev,
           isListening: false,
@@ -100,7 +128,7 @@ export const useVoiceRecognition = ({
         recognitionRef.current.abort();
       }
     };
-  }, [language, continuous, onTranscript]);
+  }, [language, continuous, onTranscript, onError]);
 
   const startListening = useCallback(() => {
     if (recognitionRef.current && !voiceState.isListening) {

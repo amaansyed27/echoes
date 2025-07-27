@@ -1,14 +1,33 @@
 import React from 'react';
 import { AppState } from '../types';
+import { useTranslations } from '../services/translations';
+import { useLanguage } from '../hooks/useLanguage';
 
 interface BottomNavigationProps {
   currentState: AppState;
   onStateChange: (state: AppState) => void;
   questProgress?: { current: number; total: number };
   onChatClick?: () => void;
+  hasActiveAdventure?: boolean;
 }
 
-const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentState, onStateChange, questProgress, onChatClick }) => {
+const BottomNavigation: React.FC<BottomNavigationProps> = ({ 
+  currentState, 
+  onStateChange, 
+  questProgress, 
+  onChatClick, 
+  hasActiveAdventure 
+}) => {
+  const { selectedLanguage } = useLanguage();
+  const t = useTranslations(selectedLanguage.code);
+  
+  // Hide chat button when in Travel Guide mode or when there's an active adventure
+  const shouldShowChatButton = onChatClick && 
+    currentState !== AppState.TRAVEL_GUIDE && 
+    currentState !== AppState.PATH_VIEW && 
+    currentState !== AppState.QUEST_VIEW &&
+    !hasActiveAdventure;
+  
   const navItems = [
     {
       state: AppState.HOME,
@@ -20,7 +39,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentState, onSta
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
       ),
-      label: 'Home'
+      label: t.nav.home
     },
     {
       state: AppState.ADVENTURES,
@@ -32,7 +51,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentState, onSta
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m-6 3l6-3" />
         </svg>
       ),
-      label: 'Adventures'
+      label: t.nav.adventures
     },
     {
       state: AppState.TRAVEL_GUIDE,
@@ -45,7 +64,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentState, onSta
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       ),
-      label: 'Guide'
+      label: t.nav.travelGuide
     },
     {
       state: AppState.MEMORIES,
@@ -57,7 +76,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentState, onSta
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       ),
-      label: 'Memories'
+      label: t.nav.memories
     },
     {
       state: AppState.PROFILE,
@@ -69,14 +88,14 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentState, onSta
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
       ),
-      label: 'Profile'
+      label: t.nav.profile
     }
   ];
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40">
       {/* Floating Chat Button */}
-      {onChatClick && (
+      {shouldShowChatButton && (
         <div className="absolute bottom-20 right-4">
           <button 
             onClick={onChatClick}

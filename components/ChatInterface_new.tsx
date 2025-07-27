@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { chatWithAI } from '../services/chatService';
-import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
-import { useLanguage } from '../hooks/useLanguage';
 import type { ChatMessage, UserProfile, GeoLocation } from '../types';
 
 interface ChatInterfaceProps {
@@ -30,35 +28,29 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceError, setVoiceError] = useState<string>('');
   const [transcript, setTranscript] = useState('');
-  const [voiceResponseEnabled, setVoiceResponseEnabled] = useState(true);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(null);
 
-  // Language and TTS support
-  const { selectedLanguage } = useLanguage();
-  const { speak, isSpeaking, isSupported } = useSpeechSynthesis(selectedLanguage.code);
-
-  // Debug speech synthesis functionality
+  // Initialize speech recognition and synthesis
   useEffect(() => {
-    console.log('Speech synthesis status:', {
-      isSupported,
-      speechSynthesis: !!window.speechSynthesis,
-      voices: window.speechSynthesis ? window.speechSynthesis.getVoices().length : 0
-    });
-  }, [isSupported]);
+    // Initialize speech synthesis
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      synthRef.current = window.speechSynthesis;
+    }
 
-  // Initialize speech recognition
-  useEffect(() => {
+    // Initialize speech recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = true;
-      recognition.lang = selectedLanguage?.speechCode || 'en-US';
+      recognition.lang = 'en-US';
       recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
@@ -77,6 +69,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
           if (event.results[i].isFinal) {
             finalTranscript += transcript;
+            console.log('Final transcript:', finalTranscript);
             setTranscript(finalTranscript);
             sendMessage(finalTranscript.trim(), true); // Mark as voice input
           } else {
@@ -125,14 +118,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       recognitionRef.current = recognition;
     }
 
-    // FIX 1: The cleanup function is now correct and only aborts speech recognition.
-    // It no longer interferes with speech synthesis.
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.abort();
       }
+      if (synthRef.current) {
+        synthRef.current.cancel();
+      }
     };
-  }, [selectedLanguage?.speechCode]);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -141,6 +135,34 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const speak = (text: string) => {
+    if (!synthRef.current || !text) return;
+    
+    synthRef.current.cancel(); // Stop any ongoing speech
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    
+    utterance.onstart = () => {
+      console.log('Started speaking:', text);
+      setIsSpeaking(true);
+    };
+    
+    utterance.onend = () => {
+      console.log('Finished speaking');
+      setIsSpeaking(false);
+    };
+    
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event);
+      setIsSpeaking(false);
+    };
+    
+    synthRef.current.speak(utterance);
+  };
 
   const sendMessage = async (text: string, isFromVoice: boolean = false) => {
     if (!text.trim()) return;
@@ -164,8 +186,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         userProfile,
         currentCity,
         previousMessages: messages,
-        questContext,
-        language: selectedLanguage.code
+        questContext
       });
 
       const aiMessage: ChatMessage = {
@@ -177,19 +198,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       setMessages((prev: ChatMessage[]) => [...prev, aiMessage]);
       
-      if (voiceResponseEnabled && response && response.trim()) {
-        setTimeout(() => {
-          if (window.speechSynthesis && isSupported) {
-            speak({
-              text: response,
-              onEnd: () => {
-                console.log('Finished speaking AI response');
-              }
-            });
-          } else {
-            console.error('Speech synthesis not available when trying to speak response');
-          }
-        }, 200);
+      // Auto-speak AI responses for voice interactions
+      if (isFromVoice) {
+        console.log('Speaking AI response:', response);
+        speak(response);
       }
     } catch (error) {
       console.error('Chat error:', error);
@@ -215,11 +227,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       console.log('Stopping voice recognition');
       recognitionRef.current.stop();
     } else {
-      // FIX 2: If the AI is speaking, stop it before listening to the user.
-      if (isSpeaking && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
       try {
+        // Request microphone permission
         await navigator.mediaDevices.getUserMedia({ audio: true });
         console.log('Starting voice recognition');
         recognitionRef.current.start();
@@ -236,6 +245,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const isVoiceSupported = !!recognitionRef.current;
+  const isSpeechSupported = !!synthRef.current;
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end">
@@ -279,20 +289,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 {message.isVoice && (
                   <div className="flex items-center mt-1 text-xs opacity-60">
                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M7 4a3 3 0 0 1 6 0v4a3 3 0 1 1-6 0V4zm4 10.93A7.001 7.001 0 0 0 17 8a1 1 0 1 0-2 0A5 5 0 0 1 5 8a1 1 0 0 0-2 0 7.001 7.001 0 0 0 6 6.93V17H6a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-2.07z" clipRule="evenodd" />
+                      <path fillRule="evenodd" d="M7 4a3 3 0 616 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 715 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
                     </svg>
                     Voice
                   </div>
-                )}
-                {message.type === 'ai' && (
-                  <button
-                    onClick={() => {
-                      speak({ text: message.content, onEnd: () => {} });
-                    }}
-                    className="mt-2 px-2 py-1 bg-blue-100 text-blue-600 rounded text-xs hover:bg-blue-200 transition-colors"
-                  >
-                    🔊 Speak
-                  </button>
                 )}
               </div>
             </div>
@@ -321,21 +321,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           )}
           
+          {/* Debug Info */}
           <div className="mb-2 text-xs text-gray-500 bg-gray-50 p-2 rounded flex items-center justify-between">
-            <span>Voice: {isVoiceSupported ? '✅' : '❌'} | Speech: {isSupported ? '✅' : '❌'} | Listening: {isListening ? '🎤' : '⏹️'} | Speaking: {isSpeaking ? '🔊' : '🔇'}</span>
-            <div className="flex space-x-1">
-              <button 
-                type="button"
-                onClick={() => setVoiceResponseEnabled(!voiceResponseEnabled)}
-                className={`px-2 py-1 rounded text-xs hover:opacity-80 ${
-                  voiceResponseEnabled 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-red-100 text-red-700'
-                }`}
-              >
-                Auto-Speak {voiceResponseEnabled ? 'ON' : 'OFF'}
-              </button>
-            </div>
+            <span>Voice: {isVoiceSupported ? '✅' : '❌'} | Speech: {isSpeechSupported ? '✅' : '❌'} | Listening: {isListening ? '🎤' : '⏹️'} | Speaking: {isSpeaking ? '🔊' : '🔇'}</span>
+            <button 
+              type="button"
+              onClick={() => speak('Testing speech synthesis functionality')}
+              className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+            >
+              Test Speech
+            </button>
           </div>
           
           <div className="flex items-center space-x-3">
@@ -369,7 +364,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               disabled={!isVoiceSupported}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M7 4a3 3 0 0 1 6 0v4a3 3 0 1 1-6 0V4zm4 10.93A7.001 7.001 0 0 0 17 8a1 1 0 1 0-2 0A5 5 0 0 1 5 8a1 1 0 0 0-2 0 7.001 7.001 0 0 0 6 6.93V17H6a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-2.07z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M7 4a3 3 0 616 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 715 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
               </svg>
             </button>
             

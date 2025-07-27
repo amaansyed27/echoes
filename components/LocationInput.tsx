@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getNearbyLocations, type LocationSuggestion } from '../services/locationService';
 import { useGeolocation } from '../hooks/useGeolocation';
+import { useLanguage } from '../hooks/useLanguage';
+import { useTranslations } from '../services/translations';
 
 interface LocationInputProps {
   onStart: (location: string) => void;
@@ -12,17 +14,29 @@ const LocationInput: React.FC<LocationInputProps> = ({ onStart, error, disabled 
   const [location, setLocation] = useState('');
   const [nearbyLocations, setNearbyLocations] = useState<LocationSuggestion[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
+  const [searchRadius, setSearchRadius] = useState(10); // Default 10km
+  const [showRadiusSelector, setShowRadiusSelector] = useState(false);
   const { location: userLocation } = useGeolocation();
+  const { selectedLanguage } = useLanguage();
+  const t = useTranslations(selectedLanguage.code);
 
-  // Load nearby locations when user location is available
+  const radiusOptions = [
+    { value: 5, label: '5km', icon: '🚶', name: t.distance.walking },
+    { value: 10, label: '10km', icon: '🚴', name: t.distance.cycling },
+    { value: 25, label: '25km', icon: '🚗', name: t.distance.driving },
+    { value: 50, label: '50km', icon: '🚄', name: t.distance.train },
+    { value: 100, label: '100km', icon: '✈️', name: t.distance.flight }
+  ];
+
+  // Load nearby locations when user location or search radius changes
   useEffect(() => {
-    if (userLocation && !loadingNearby && nearbyLocations.length === 0) {
+    if (userLocation && !loadingNearby) {
       setLoadingNearby(true);
-      getNearbyLocations(userLocation, 10) // Limit to 10km radius for home page
+      getNearbyLocations(userLocation, searchRadius)
         .then(locations => {
-          // Filter to ensure all locations are within 10km
-          const filteredLocations = locations.filter(loc => (loc.distance || 0) <= 10);
-          setNearbyLocations(filteredLocations.slice(0, 8)); // Limit to 8 suggestions
+          // Filter to ensure all locations are within selected radius
+          const filteredLocations = locations.filter(loc => (loc.distance || 0) <= searchRadius);
+          setNearbyLocations(filteredLocations.slice(0, 12)); // Show more results for larger radius
         })
         .catch(error => {
           console.error('Failed to load nearby locations:', error);
@@ -31,7 +45,7 @@ const LocationInput: React.FC<LocationInputProps> = ({ onStart, error, disabled 
           setLoadingNearby(false);
         });
     }
-  }, [userLocation, loadingNearby, nearbyLocations.length]);
+  }, [userLocation, searchRadius]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +57,12 @@ const LocationInput: React.FC<LocationInputProps> = ({ onStart, error, disabled 
   const handleLocationSelect = (selectedLocation: LocationSuggestion) => {
     setLocation(selectedLocation.name);
     onStart(selectedLocation.name);
+  };
+
+  const handleRadiusChange = (radius: number) => {
+    setSearchRadius(radius);
+    setShowRadiusSelector(false);
+    setNearbyLocations([]); // Clear current results
   };
 
   const getLocationIcon = (type: string) => {
@@ -66,8 +86,8 @@ const LocationInput: React.FC<LocationInputProps> = ({ onStart, error, disabled 
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold mb-2">Start Your Adventure</h2>
-          <p className="text-blue-100">Where would you like to explore today?</p>
+          <h2 className="text-2xl font-bold mb-2">{t.adventures.startYourAdventure}</h2>
+          <p className="text-blue-100">{t.adventures.whereToExplore}</p>
         </div>
 
         {/* Input Section */}
@@ -78,7 +98,7 @@ const LocationInput: React.FC<LocationInputProps> = ({ onStart, error, disabled 
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="Enter city or landmark..."
+                placeholder={t.adventures.enterLocation}
                 disabled={disabled}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white disabled:opacity-50"
               />
@@ -90,7 +110,7 @@ const LocationInput: React.FC<LocationInputProps> = ({ onStart, error, disabled 
                 {disabled ? (
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white animate-spin"></div>
                 ) : (
-                  'Go'
+                  t.common.go
                 )}
               </button>
             </div>
@@ -104,10 +124,42 @@ const LocationInput: React.FC<LocationInputProps> = ({ onStart, error, disabled 
           {userLocation && (
             <div className="mt-6">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-gray-700">📍 Nearby Adventures (10km)</h3>
-                {loadingNearby && (
-                  <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 animate-spin"></div>
-                )}
+                <h3 className="text-sm font-semibold text-gray-700">📍 Nearby Adventures</h3>
+                <div className="flex items-center space-x-2">
+                  {loadingNearby && (
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 animate-spin"></div>
+                  )}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowRadiusSelector(!showRadiusSelector)}
+                      className="flex items-center space-x-1 px-3 py-1 bg-gray-100 border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-700 transition-colors"
+                      disabled={disabled}
+                    >
+                      <span>{radiusOptions.find(r => r.value === searchRadius)?.icon}</span>
+                      <span>{searchRadius}km</span>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {showRadiusSelector && (
+                      <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 shadow-lg z-10 min-w-[120px]">
+                        {radiusOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => handleRadiusChange(option.value)}
+                            className={`w-full flex items-center space-x-2 px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${
+                              searchRadius === option.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                            }`}
+                          >
+                            <span>{option.icon}</span>
+                            <span>{option.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
               {nearbyLocations.length > 0 && (
@@ -133,7 +185,13 @@ const LocationInput: React.FC<LocationInputProps> = ({ onStart, error, disabled 
 
               {!loadingNearby && nearbyLocations.length === 0 && userLocation && (
                 <div className="text-center py-4">
-                  <div className="text-gray-400 text-sm">No adventures found within 10km</div>
+                  <div className="text-gray-400 text-sm">No adventures found within {searchRadius}km</div>
+                  <button
+                    onClick={() => setShowRadiusSelector(true)}
+                    className="text-blue-500 text-xs hover:text-blue-600 mt-1"
+                  >
+                    Try a larger radius
+                  </button>
                 </div>
               )}
             </div>

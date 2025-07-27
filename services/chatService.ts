@@ -1,11 +1,27 @@
 import { GoogleGenAI } from "@google/genai";
 import type { ChatMessage, UserProfile, GeoLocation } from '../types';
 
-if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable not set");
+if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY environment variable not set");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+const getLanguageName = (code: string): string => {
+    const languageNames: Record<string, string> = {
+        'en': 'English',
+        'hi': 'Hindi',
+        'es': 'Spanish',
+        'fr': 'French',
+        'de': 'German',
+        'ja': 'Japanese',
+        'ko': 'Korean',
+        'pt': 'Portuguese',
+        'ar': 'Arabic',
+        'zh': 'Chinese'
+    };
+    return languageNames[code] || 'English';
+};
 
 // Enhanced chat service for interactive AI conversations
 export const chatWithAI = async (
@@ -16,9 +32,15 @@ export const chatWithAI = async (
     currentCity?: string;
     previousMessages?: ChatMessage[];
     questContext?: any;
+    language?: string;
   }
 ): Promise<string> => {
-  const systemPrompt = `You are Echoes, a mystical AI travel guide and companion. You're knowledgeable, engaging, and have a slightly mystical personality. You help travelers discover the hidden stories and secrets of places around the world.
+  const language = context?.language || 'en';
+  const languageInstruction = language === 'en' 
+    ? '' 
+    : `Respond in ${getLanguageName(language)} language. Use natural, conversational ${getLanguageName(language)}.`;
+  
+  const systemPrompt = `You are Echoes, a mystical AI travel guide and companion. You're knowledgeable, engaging, and have a slightly mystical personality. You help travelers discover the hidden stories and secrets of places around the world. ${languageInstruction}
 
 Current context:
 ${context?.currentCity ? `- Current city: ${context.currentCity}` : ''}

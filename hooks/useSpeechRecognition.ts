@@ -25,7 +25,7 @@ declare global {
   }
 }
 
-export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
+export const useSpeechRecognition = (defaultLanguage: string = 'en-US'): UseSpeechRecognitionReturn => {
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
   const [finalTranscript, setFinalTranscript] = useState('');
@@ -50,7 +50,7 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
     
     recognitionRef.current.continuous = options.continuous ?? true;
     recognitionRef.current.interimResults = options.interimResults ?? true;
-    recognitionRef.current.lang = options.lang ?? 'en-US';
+    recognitionRef.current.lang = options.lang ?? defaultLanguage;
     
     recognitionRef.current.onstart = () => {
       setIsListening(true);

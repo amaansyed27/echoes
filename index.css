@@ -1,9 +1,9 @@
+/* Import Atlas Theme */
+@import url('./atlas-theme.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Atlas Theme */
-@import url('./atlas-theme.css');
 
 /* Base styles for light theme */
 body {

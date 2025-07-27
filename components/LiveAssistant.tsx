@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
+import { useLanguage } from '../hooks/useLanguage';
 import { generateChatResponse } from '../services/geminiService';
 import { UserProfile, Quest, GeoLocation } from '../types';
 
@@ -37,11 +38,13 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({
     resetTranscript
   } = useSpeechRecognition();
 
+  const { selectedLanguage } = useLanguage();
+  
   const {
     speak,
     cancel: cancelSpeech,
     isSpeaking
-  } = useSpeechSynthesis();
+  } = useSpeechSynthesis(selectedLanguage.code);
 
   // Handle voice input completion
   useEffect(() => {
