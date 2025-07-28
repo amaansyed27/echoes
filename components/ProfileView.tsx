@@ -23,19 +23,21 @@ const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   };
 
   const getLevel = (points: number) => {
-    return Math.floor(points / 1000) + 1;
+    return Math.floor((points || 0) / 1000) + 1;
   };
 
   const getPointsToNextLevel = (points: number) => {
-    const currentLevel = getLevel(points);
+    const safePoints = points || 0;
+    const currentLevel = getLevel(safePoints);
     const pointsForNextLevel = currentLevel * 1000;
-    return pointsForNextLevel - points;
+    return pointsForNextLevel - safePoints;
   };
 
   const progressToNextLevel = (points: number) => {
-    const currentLevelStart = (getLevel(points) - 1) * 1000;
-    const nextLevelStart = getLevel(points) * 1000;
-    return ((points - currentLevelStart) / (nextLevelStart - currentLevelStart)) * 100;
+    const safePoints = points || 0;
+    const currentLevelStart = (getLevel(safePoints) - 1) * 1000;
+    const nextLevelStart = getLevel(safePoints) * 1000;
+    return ((safePoints - currentLevelStart) / (nextLevelStart - currentLevelStart)) * 100;
   };
 
   return (

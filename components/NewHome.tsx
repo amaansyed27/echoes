@@ -32,29 +32,7 @@ const NewHome: React.FC<NewHomeProps> = ({ userProfile, adventures, onNavigate }
     { label: 'Trip Plans', value: tripPlans.length, icon: '🧭', color: 'text-orange-600' }
   ];
 
-  const recentActivities = [
-    ...activeTripPlans.slice(0, 2).map((plan: any) => ({
-      type: 'trip',
-      title: `Active Trip: ${plan.name}`,
-      description: `${plan.preferences.mood} journey to ${plan.destination}`,
-      time: 'In progress',
-      icon: '🧭'
-    })),
-    ...adventures.slice(-2).map(adventure => ({
-      type: 'adventure',
-      title: `Started: ${adventure.title}`,
-      description: adventure.introNarrative.slice(0, 60) + '...',
-      time: '2 hours ago',
-      icon: '🗺️'
-    })),
-    {
-      type: 'quest',
-      title: 'Completed Photo Challenge',
-      description: 'Captured memories at Central Park',
-      time: '5 hours ago',
-      icon: '📸'
-    }
-  ].slice(0, 4); // Limit to 4 items
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -175,18 +153,6 @@ const NewHome: React.FC<NewHomeProps> = ({ userProfile, adventures, onNavigate }
           <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
           <div className="bg-white border border-gray-200">
             <div className="divide-y divide-gray-200">
-              {recentActivities.slice(0, 4).map((activity, index) => (
-                <div key={index} className="p-4 flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-gray-100 flex items-center justify-center text-lg">
-                    {activity.icon}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{activity.title}</h4>
-                    <p className="text-sm text-gray-600">{activity.description}</p>
-                  </div>
-                  <span className="text-xs text-gray-500">{activity.time}</span>
-                </div>
-              ))}
             </div>
           </div>
         </div>
@@ -202,7 +168,7 @@ const NewHome: React.FC<NewHomeProps> = ({ userProfile, adventures, onNavigate }
             </div>
             <div className="text-center">
               <div className="text-3xl mb-2">⭐</div>
-              <div className="text-2xl font-bold text-amber-600">{userProfile.totalPoints}</div>
+              <div className="text-2xl font-bold text-amber-600">{userProfile.totalPoints || 0}</div>
               <div className="text-sm text-gray-600">Total Points</div>
             </div>
             <div className="text-center">

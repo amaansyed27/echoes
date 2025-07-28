@@ -98,10 +98,20 @@ class AuthService {
 
   async signInWithGoogle(): Promise<void> {
     try {
+      // Determine the correct redirect URL based on environment
+      const redirectTo = window.location.origin === 'http://localhost:5173' || 
+                        window.location.origin === 'http://localhost:5174' || 
+                        window.location.origin === 'http://localhost:3000'
+        ? 'http://localhost:5173'
+        : 'https://gems-echoes.vercel.app'
+
+      console.log('Redirecting to:', redirectTo)
+      console.log('Current origin:', window.location.origin)
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: redirectTo,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

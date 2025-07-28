@@ -104,56 +104,95 @@ export const updateUserProfile = async (userId: string, profile: Partial<UserPro
 // Adventure operations
 export const getUserAdventures = async (userId: string): Promise<Story[]> => {
   try {
+    console.log('Fetching adventures for user:', userId);
+    
     const { data, error } = await supabase
       .from('adventures')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching adventures:', error);
+      throw error;
+    }
+
+    console.log('Raw adventures from database:', data);
 
     return data.map(adventure => ({
       id: adventure.id,
       title: adventure.title,
-      introNarrative: adventure.description,
+      introNarrative: adventure.description || '',
       destination: {
-        name: adventure.destination_name,
-        latitude: adventure.destination_latitude,
-        longitude: adventure.destination_longitude
+        name: adventure.city,
+        latitude: 0, // Default values since not stored in simple schema
+        longitude: 0
       },
-      currentQuestIndex: adventure.current_quest_index,
-      quests: adventure.quests,
-      completedQuests: adventure.completed_quests || []
-    }))
+      currentQuestIndex: 0, // Default values since not stored in simple schema
+      quests: [], // Default empty since not stored in simple schema
+      completedQuests: [] // Default empty since not stored in simple schema
+    }));
   } catch (error) {
-    console.error('Error fetching user adventures:', error)
-    throw error
+    console.error('Error fetching user adventures:', error);
+    throw error;
   }
 }
 
 export const saveAdventure = async (userId: string, adventure: Story): Promise<void> => {
   try {
-    const { error } = await supabase
+    console.log('Saving adventure:', { userId, adventure });
+    
+    // Check if adventure already exists (match by title and city)
+    const { data: existingAdventure } = await supabase
       .from('adventures')
-      .upsert({
-        id: adventure.id,
-        user_id: userId,
-        title: adventure.title,
-        description: adventure.introNarrative,
-        destination_name: adventure.destination.name,
-        destination_country: 'Unknown', // We'll need to add this to the Story type or extract from destination name
-        destination_latitude: adventure.destination.latitude,
-        destination_longitude: adventure.destination.longitude,
-        current_quest_index: adventure.currentQuestIndex,
-        quests: adventure.quests,
-        completed_quests: adventure.completedQuests,
-        updated_at: new Date().toISOString()
-      })
+      .select('id')
+      .eq('user_id', userId)
+      .eq('title', adventure.title)
+      .eq('city', adventure.destination.name)
+      .single()
 
-    if (error) throw error
+    const adventureData = {
+      user_id: userId,
+      title: adventure.title,
+      description: adventure.introNarrative || '',
+      city: adventure.destination.name,
+      points: 0, // Default points
+      difficulty: 'easy', // Default difficulty
+      estimated_time: '1 hour', // Default time
+      tags: [], // Default empty tags
+      updated_at: new Date().toISOString()
+    };
+
+    if (existingAdventure) {
+      console.log('Updating existing adventure:', existingAdventure.id);
+      // Update existing adventure
+      const { error } = await supabase
+        .from('adventures')
+        .update(adventureData)
+        .eq('id', existingAdventure.id)
+
+      if (error) {
+        console.error('Error updating adventure:', error);
+        throw error;
+      }
+    } else {
+      console.log('Creating new adventure');
+      // Insert new adventure (let database generate UUID)
+      const { data, error } = await supabase
+        .from('adventures')
+        .insert(adventureData)
+        .select()
+
+      if (error) {
+        console.error('Error inserting adventure:', error);
+        throw error;
+      }
+      
+      console.log('Adventure saved successfully:', data);
+    }
   } catch (error) {
-    console.error('Error saving adventure:', error)
-    throw error
+    console.error('Error saving adventure:', error);
+    throw error;
   }
 }
 
@@ -255,55 +294,67 @@ export const updateUserAchievement = async (userId: string, achievement: Achieve
 // Memory operations
 export const getUserMemories = async (userId: string): Promise<Memory[]> => {
   try {
+    console.log('Fetching memories for user:', userId);
+    
     const { data, error } = await supabase
       .from('memories')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+      .order('captured_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching memories:', error);
+      throw error;
+    }
+
+    console.log('Raw memories from database:', data);
 
     return data.map(memory => ({
       id: memory.id,
       type: 'quest' as const,
       title: memory.title,
-      description: memory.description,
+      description: memory.description || '',
       location: {
-        name: memory.location_name,
-        latitude: memory.latitude,
-        longitude: memory.longitude,
-        country: 'Unknown' // We'll need to store this properly
+        latitude: 0, // Default since not stored in simple schema
+        longitude: 0, // Default since not stored in simple schema
+        name: memory.location || 'Unknown',
+        country: 'Unknown'
       },
-      date: new Date(memory.created_at),
-      photo: memory.photo_url || undefined,
+      date: new Date(memory.captured_at),
+      photo: memory.image,
       adventureId: memory.adventure_id
-    }))
+    }));
   } catch (error) {
-    console.error('Error fetching user memories:', error)
-    throw error
+    console.error('Error fetching user memories:', error);
+    throw error;
   }
 }
 
 export const saveMemory = async (userId: string, memory: Omit<Memory, 'id'>): Promise<void> => {
   try {
-    const { error } = await supabase
+    console.log('Saving memory:', { userId, memory });
+    
+    const { data, error } = await supabase
       .from('memories')
       .insert({
         user_id: userId,
-        adventure_id: memory.adventureId || '',
-        quest_id: '', // We'll need to add this to Memory type
+        adventure_id: memory.adventureId || null,
         title: memory.title,
         description: memory.description,
-        location_name: memory.location.name,
-        latitude: memory.location.latitude,
-        longitude: memory.location.longitude,
-        photo_url: memory.photo || null,
-        audio_url: null // We'll need to add audio support
+        location: memory.location.name,
+        image: memory.photo || null,
+        captured_at: new Date(memory.date).toISOString()
       })
+      .select()
 
-    if (error) throw error
+    if (error) {
+      console.error('Error saving memory:', error);
+      throw error;
+    }
+    
+    console.log('Memory saved successfully:', data);
   } catch (error) {
-    console.error('Error saving memory:', error)
-    throw error
+    console.error('Error saving memory:', error);
+    throw error;
   }
 }

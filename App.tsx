@@ -27,7 +27,9 @@ import {
   getUserAdventures, 
   saveAdventure,
   getUserBadges,
-  getUserAchievements 
+  getUserAchievements,
+  saveMemory,
+  getUserMemories
 } from './services/databaseService';
 
 const App: React.FC = () => {
@@ -86,9 +88,15 @@ const AuthenticatedApp: React.FC<{
     const loadUserData = async () => {
       if (user?.id) {
         try {
-          // Load adventures from database
-          const userAdventures = await getUserAdventures(user.id);
+          // Load adventures and memories from database
+          const [userAdventures, userMemories] = await Promise.all([
+            getUserAdventures(user.id),
+            getUserMemories(user.id)
+          ]);
+          
           setAdventures(userAdventures);
+          console.log('Loaded adventures:', userAdventures);
+          console.log('Loaded memories:', userMemories);
           
           // Load badges and achievements
           const [badges, achievements] = await Promise.all([
@@ -129,24 +137,6 @@ const AuthenticatedApp: React.FC<{
     setSpeakingTextKey(null);
   }, [synthCancel]);
 
-  // Save data to database instead of localStorage
-  useEffect(() => {
-    const saveAdventuresToDB = async () => {
-      if (user?.id && adventures.length > 0) {
-        try {
-          // Save each adventure to database
-          for (const adventure of adventures) {
-            await saveAdventure(user.id, adventure);
-          }
-        } catch (error) {
-          console.error("Failed to save adventures to database", error);
-        }
-      }
-    };
-    
-    saveAdventuresToDB();
-  }, [adventures, user?.id]);
-
   // Update profile in database
   const updateUserProfileHandler = useCallback(async (newProfile: UserProfile) => {
     setUserProfile(newProfile);
@@ -161,15 +151,26 @@ const AuthenticatedApp: React.FC<{
   }, [user?.id, updateProfile]);
 
   const awardPoints = useCallback(async (points: number, source: string) => {
+    // Ensure totalPoints is a valid number, default to 0 if undefined/null/NaN
+    const currentPoints = userProfile.totalPoints || 0;
+    const newTotalPoints = currentPoints + points;
+    
+    console.log('Awarding points:', {
+      currentPoints,
+      pointsToAdd: points,
+      newTotalPoints,
+      source
+    });
+    
     const updatedProfile = {
       ...userProfile,
-      totalPoints: userProfile.totalPoints + points,
-      level: Math.floor((userProfile.totalPoints + points) / 1000) + 1,
-      completedQuests: userProfile.completedQuests + (source === 'quest' ? 1 : 0)
+      totalPoints: newTotalPoints,
+      level: Math.floor(newTotalPoints / 1000) + 1,
+      completedQuests: (userProfile.completedQuests || 0) + (source === 'quest' ? 1 : 0)
     };
     
     // Check for level up
-    if (updatedProfile.level > userProfile.level) {
+    if (updatedProfile.level > (userProfile.level || 1)) {
       console.log(`Level up! Now level ${updatedProfile.level}`);
     }
 
@@ -189,16 +190,37 @@ const AuthenticatedApp: React.FC<{
         currentQuestIndex: 0,
         completedQuests: [],
       };
+      
+      // Save adventure to database immediately
+      if (user?.id) {
+        try {
+          await saveAdventure(user.id, newAdventure);
+          console.log('Adventure saved to database successfully');
+        } catch (error) {
+          console.error('Failed to save adventure to database:', error);
+        }
+      }
+      
       setAdventures(prev => [newAdventure, ...prev]);
       setActiveAdventure(newAdventure);
       setAppState(AppState.PATH_VIEW);
 
-      // Add city to visited cities
+      // Add city to visited cities and update profile
       if (!userProfile.visitedCities.includes(location)) {
-        setUserProfile(prev => ({
-          ...prev,
-          visitedCities: [...prev.visitedCities, location]
-        }));
+        const updatedProfile = {
+          ...userProfile,
+          visitedCities: [...userProfile.visitedCities, location]
+        };
+        setUserProfile(updatedProfile);
+        
+        // Update profile in database
+        if (user?.id) {
+          try {
+            await updateProfile(updatedProfile);
+          } catch (error) {
+            console.error('Failed to update profile:', error);
+          }
+        }
       }
     } catch (err) {
       console.error(err);
@@ -208,7 +230,7 @@ const AuthenticatedApp: React.FC<{
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [userProfile.visitedCities, selectedLanguage.code]);
+  }, [userProfile.visitedCities, selectedLanguage.code, user?.id, updateProfile]);
   
   const handleSelectAdventure = (adventureId: string) => {
     const adventure = adventures.find(a => a.id === adventureId);
@@ -241,6 +263,34 @@ const AuthenticatedApp: React.FC<{
         currentQuestIndex: activeAdventure.currentQuestIndex + 1,
     };
     
+    // Save updated adventure to database immediately
+    if (user?.id) {
+      saveAdventure(user.id, updatedAdventure).catch(error => {
+        console.error('Failed to save adventure progress:', error);
+      });
+      
+      // Create a memory for this completed quest
+      const memory = {
+        type: 'quest' as const,
+        title: `Completed: ${currentQuest.title}`,
+        description: `Successfully completed the quest "${currentQuest.title}" in ${currentQuest.targetLocationName}`,
+        location: {
+          latitude: currentQuest.latitude,
+          longitude: currentQuest.longitude,
+          name: currentQuest.targetLocationName,
+          country: activeAdventure.destination.name.split(',').pop()?.trim() || 'Unknown'
+        },
+        date: new Date(),
+        photo: completedQuestData.userPhoto,
+        questData: completedQuest,
+        adventureId: activeAdventure.id
+      };
+      
+      saveMemory(user.id, memory).catch(error => {
+        console.error('Failed to save quest memory:', error);
+      });
+    }
+    
     setActiveAdventure(updatedAdventure);
     setAdventures(prevAdventures => prevAdventures.map(a => a.id === updatedAdventure.id ? updatedAdventure : a));
     
@@ -250,7 +300,7 @@ const AuthenticatedApp: React.FC<{
     
     setAppState(AppState.PATH_VIEW);
 
-  }, [activeAdventure, awardPoints]);
+  }, [activeAdventure, awardPoints, user?.id]);
 
   const handleHomeClick = () => {
     setAppState(AppState.HOME);
@@ -504,6 +554,7 @@ const AuthenticatedApp: React.FC<{
           currentQuest={activeAdventure?.quests[activeAdventure?.currentQuestIndex]}
           isVisible={appState === AppState.QUEST_VIEW || appState === AppState.PATH_VIEW}
         />
+        
         
         {/* Modals */}
         {isLibraryOpen && (
