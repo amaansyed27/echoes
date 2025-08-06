@@ -209,17 +209,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Google Gemini AI** for powering our intelligent content generation
 - **OpenStreetMap** for location data
 - **The travel community** for inspiration and feedback
-
----
-
-## 🚀 What's Next?
-
-- **Social Features**: Share journeys with friends
-- **Multiplayer Quests**: Collaborative exploration challenges
-- **AR Integration**: Augmented reality quest overlays
-- **Advanced Analytics**: Detailed exploration insights
-- **Community Content**: User-generated quests and stories
-
 ---
 
 **Ready to start your adventure? [Launch Echoes](https://gems-echoes.vercel.app/) and discover the world like never before! 🌍✨**
